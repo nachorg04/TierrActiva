@@ -22,7 +22,11 @@
         android:id="@+id/mapFragment"
         android:name="com.example.empresas_turismo_activo.ui.map.MapFragment"
         android:label="@string/screen_map"
-        tools:layout="@layout/fragment_map" />
+        tools:layout="@layout/fragment_map">
+        <action
+            android:id="@+id/action_mapFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+    </fragment>
 
     <!-- Detalle alcanzado solo desde lista; empresaId llega mediante Safe Args -->
     <fragment

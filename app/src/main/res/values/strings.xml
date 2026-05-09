@@ -11,4 +11,7 @@
     <string name="detail_loading">Cargando…</string>
     <string name="detail_not_found">Empresa no encontrada.</string>
     <string name="detail_zona_label">Zona de actividad: %s</string>
+    <string name="detail_actividades_titulo">Actividades</string>
+    <string name="detail_sin_actividades">No hay actividades listadas.</string>
+    <string name="detail_activity_image_desc">Imagen de la actividad</string>
 </resources>

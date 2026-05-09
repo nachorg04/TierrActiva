@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import coil.dispose
 import coil.load
 import com.example.empresas_turismo_activo.R
@@ -18,7 +20,7 @@ import com.example.empresas_turismo_activo.databinding.FragmentDetailBinding
 import com.example.empresas_turismo_activo.domain.model.Empresa
 import kotlinx.coroutines.launch
 
-/** Destino profundo que recibe [empresaId] gracias a Safe Args desde el catálogo. */
+/** Destino profundo que recibe [empresaId] gracias a Safe Args desde el catálogo o el mapa. */
 class DetailFragment : Fragment() {
 
     private val args: DetailFragmentArgs by navArgs()
@@ -31,6 +33,8 @@ class DetailFragment : Fragment() {
         DetailViewModelFactory(repo, args.empresaId)
     }
 
+    private val actividadesAdapter = ActividadListAdapter()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -42,6 +46,10 @@ class DetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.recyclerActividades.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        binding.recyclerActividades.adapter = actividadesAdapter
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect(::renderDetailState)
@@ -63,7 +71,8 @@ class DetailFragment : Fragment() {
         binding.textZona.text = ""
         binding.textInformacionTitulo.text = ""
         binding.textDescripcion.text = ""
-        binding.textActividades.text = ""
+        binding.textSinActividades.isVisible = false
+        actividadesAdapter.submitList(emptyList())
         binding.imagePortada.dispose()
     }
 
@@ -74,7 +83,8 @@ class DetailFragment : Fragment() {
         binding.textZona.text = ""
         binding.textInformacionTitulo.text = ""
         binding.textDescripcion.text = ""
-        binding.textActividades.text = ""
+        binding.textSinActividades.isVisible = true
+        actividadesAdapter.submitList(emptyList())
     }
 
     private fun render(empresa: Empresa) {
@@ -89,15 +99,23 @@ class DetailFragment : Fragment() {
                 appendLine(empresa.contacto.emails.joinToString())
             }
             empresa.contacto.web?.let { appendLine(it) }
+            if (empresa.contacto.redesSociales.isNotEmpty()) {
+                appendLine()
+                empresa.contacto.redesSociales.forEach { red ->
+                    appendLine("${red.plataforma}: ${red.url}")
+                }
+            }
         }
         binding.textContacto.text = contactLines.trim()
         binding.textZona.text = getString(R.string.detail_zona_label, empresa.informacion.zonaActividad)
         binding.textInformacionTitulo.text = empresa.informacion.titulo
         binding.textDescripcion.text = empresa.informacion.descripcion
-        binding.textActividades.text =
-            empresa.informacion.actividades.joinToString("\n") {
-                "• ${it.nombre} — ${it.categoria}"
-            }
+
+        val actividades = empresa.informacion.actividades
+        val sinActividades = actividades.isEmpty()
+        binding.textSinActividades.isVisible = sinActividades
+        actividadesAdapter.submitList(actividades)
+
         binding.imagePortada.load(empresa.imagenPortada) {
             crossfade(true)
             placeholder(R.drawable.ic_launcher_foreground)
@@ -107,6 +125,7 @@ class DetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.recyclerActividades.adapter = null
         _binding = null
     }
 }

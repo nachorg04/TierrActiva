@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Scroll vertical único con Recycler nested disabled para actividades (Coil por ítem). -->
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -59,13 +59,34 @@
             tools:text="Descripción amplia …" />
 
         <TextView
-            android:id="@+id/textActividades"
+            android:id="@+id/textActividadesTitulo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lineSpacingExtra="4dp"
-            android:padding="16dp"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:text="@string/detail_actividades_titulo"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <TextView
+            android:id="@+id/textSinActividades"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            android:text="@string/detail_sin_actividades"
             android:textAppearance="?attr/textAppearanceBodySmall"
-            tools:text="Actividades" />
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerActividades"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            tools:itemCount="2"
+            tools:listitem="@layout/item_actividad" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

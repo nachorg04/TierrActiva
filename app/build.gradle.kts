@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,6 +22,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val mapsKeyFromGradle = (findProperty("MAPS_API_KEY") as String?)?.trim().orEmpty()
+        val mapsKeyFromLocal = run {
+            val p = Properties()
+            rootProject.file("local.properties").takeIf { it.exists() }
+                ?.inputStream()
+                ?.use { p.load(it) }
+            p.getProperty("MAPS_API_KEY", "").trim()
+        }
+        manifestPlaceholders["MAPS_API_KEY"] =
+            mapsKeyFromGradle.ifEmpty { mapsKeyFromLocal }
     }
 
     buildTypes {
@@ -53,6 +66,8 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+
+    implementation(libs.play.services.maps)
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

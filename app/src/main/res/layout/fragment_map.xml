@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MVP: sin SDK de mapas aún; sirve como destino del bottom navigation. -->
+<!-- SupportMapFragment incrustado como hijo para Google Play Services Maps. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textMapPlaceholder"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/map_fragment_container"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="@string/map_placeholder"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
+        android:layout_height="match_parent"
+        tools:layout="@android:layout/simple_list_item_1" />
 </FrameLayout>
