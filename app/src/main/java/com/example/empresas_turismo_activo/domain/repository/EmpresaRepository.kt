@@ -23,4 +23,7 @@ interface EmpresaRepository {
      * solo espacios devuelve todas las filas ordenadas igual que el resto del catálogo.
      */
     fun searchEmpresas(query: String): Flow<List<Empresa>>
+
+    /** Descarga el catálogo remoto y sustituye datos locales; fallos de red se absorben en la implementación. */
+    suspend fun syncEmpresas()
 }

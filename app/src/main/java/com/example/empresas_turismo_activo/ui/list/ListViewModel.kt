@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * Consolida el flujo persistente desde Room aplicando filtros locales de nombre/localidad combinables.
@@ -16,6 +17,12 @@ import kotlinx.coroutines.flow.stateIn
 class ListViewModel(
     private val repository: EmpresaRepository,
 ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            repository.syncEmpresas()
+        }
+    }
 
     private val nombreFilter = MutableStateFlow("")
     private val localidadFilter = MutableStateFlow("")
