@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/imagePortada"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:contentDescription="@string/screen_detail"
+            android:scaleType="centerCrop"
+            tools:src="@android:color/darker_gray" />
+
+        <TextView
+            android:id="@+id/textTituloNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            tools:text="Empresa ejemplo" />
+
+        <TextView
+            android:id="@+id/textContacto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            tools:text="Concejo / localidad …" />
+
+        <TextView
+            android:id="@+id/textZona"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            tools:text="Zona de actividad" />
+
+        <TextView
+            android:id="@+id/textInformacionTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            tools:text="Título información" />
+
+        <TextView
+            android:id="@+id/textDescripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            tools:text="Descripción amplia …" />
+
+        <TextView
+            android:id="@+id/textActividades"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="4dp"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            tools:text="Actividades" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Empresas_Turismo_Activo</string>
+    <string name="nav_list">Lista</string>
+    <string name="nav_map">Mapa</string>
+    <string name="screen_list">Empresas</string>
+    <string name="screen_map">Mapa</string>
+    <string name="screen_detail">Detalle</string>
+    <string name="filter_by_name">Nombre</string>
+    <string name="filter_by_localidad">Localidad</string>
+    <string name="map_placeholder">Mapa: aquí enlazarías Google Maps u OSM con las coordenadas de las empresas.</string>
+    <string name="detail_loading">Cargando…</string>
+    <string name="detail_not_found">Empresa no encontrada.</string>
+    <string name="detail_zona_label">Zona de actividad: %s</string>
 </resources>

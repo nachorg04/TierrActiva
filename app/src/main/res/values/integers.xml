@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Número de columnas para el Recycler del listado en teléfonos compactos -->
+<resources>
+    <integer name="list_span_count">1</integer>
+</resources>

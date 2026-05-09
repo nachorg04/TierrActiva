@@ -28,7 +28,7 @@ interface EmpresaDao {
     suspend fun getEmpresaById(id: String): EmpresaEntity?
 
     /**
-     * Filtra por localidad, zona de actividad o coincidencia textual dentro del JSON serializado de actividades
+     * Filtra por nombre comercial, localidad, zona de actividad o coincidencia textual dentro del JSON serializado de actividades
      * (nombre o categoría). Una consulta vacía devuelve todo el catálogo respetando el mismo orden alfabético.
      */
     @Query(
@@ -36,6 +36,7 @@ interface EmpresaDao {
         SELECT * FROM empresas_table
         WHERE (
             TRIM(:query) = '' OR
+            nombre LIKE '%' || TRIM(:query) || '%' OR
             localidad LIKE '%' || TRIM(:query) || '%' OR
             zona_actividad LIKE '%' || TRIM(:query) || '%' OR
             actividades LIKE '%' || TRIM(:query) || '%'

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/listFragment">
+
+    <!-- Catálogo: destino inicial y entrada desde bottom nav -->
+    <fragment
+        android:id="@+id/listFragment"
+        android:name="com.example.empresas_turismo_activo.ui.list.ListFragment"
+        android:label="@string/screen_list"
+        tools:layout="@layout/fragment_list">
+        <!-- Safe Args genera Directions con empresaId:String -->
+        <action
+            android:id="@+id/action_listFragment_to_detailFragment"
+            app:destination="@id/detailFragment" />
+    </fragment>
+
+    <!-- Mapa (MVP textual); segundo destino de bottom navigation -->
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.example.empresas_turismo_activo.ui.map.MapFragment"
+        android:label="@string/screen_map"
+        tools:layout="@layout/fragment_map" />
+
+    <!-- Detalle alcanzado solo desde lista; empresaId llega mediante Safe Args -->
+    <fragment
+        android:id="@+id/detailFragment"
+        android:name="com.example.empresas_turismo_activo.ui.detail.DetailFragment"
+        android:label="@string/screen_detail"
+        tools:layout="@layout/fragment_detail">
+        <argument
+            android:name="empresaId"
+            app:argType="string"
+            app:nullable="false" />
+    </fragment>
+
+</navigation>

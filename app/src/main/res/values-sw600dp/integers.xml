@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tableta (≥600 dp smALLEST WIDTH): Lista en cuadrícula con 2 columnas (véase también layout-sw600dp/fragment_list). -->
+<resources>
+    <integer name="list_span_count">2</integer>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Los android:id DEBEN coincidir con fragment ids del nav_graph para NavigationUI.setupWithNavController -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/listFragment"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="@string/nav_list" />
+    <item
+        android:id="@+id/mapFragment"
+        android:icon="@android:drawable/ic_menu_mapmode"
+        android:title="@string/nav_map" />
+</menu>
