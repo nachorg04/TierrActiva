@@ -1,6 +1,7 @@
 package com.example.empresas_turismo_activo
 
 import android.app.Application
+import com.example.empresas_turismo_activo.data.preferences.ListPreferences
 import com.example.empresas_turismo_activo.data.local.db.AppDatabase
 import com.example.empresas_turismo_activo.data.remote.EmpresaApiService
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepositoryImpl
@@ -35,6 +36,9 @@ class TurismoApplication : Application() {
     val empresaRepository: EmpresaRepository by lazy {
         EmpresaRepositoryImpl(database.empresaDao(), empresaApi)
     }
+
+    /** Filtros y preferencias visuales persistidos fuera del ciclo de vida del Fragment. */
+    val listPreferences: ListPreferences by lazy { ListPreferences(this) }
 
     companion object {
         /** Host del raw de GitHub; el endpoint relativo vive en [EmpresaApiService]. */

@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Empresas_Turismo_Activo</string>
+    <string name="app_name">Turismo Activo Asturias</string>
     <string name="nav_list">Lista</string>
     <string name="nav_map">Mapa</string>
     <string name="screen_list">Empresas</string>
@@ -7,7 +8,13 @@
     <string name="screen_detail">Detalle</string>
     <string name="filter_by_name">Nombre</string>
     <string name="filter_by_localidad">Localidad</string>
-    <string name="map_placeholder">Mapa: aquí enlazarías Google Maps u OSM con las coordenadas de las empresas.</string>
+    <string name="list_sort_alphabet">Orden A–Z</string>
+    <string name="list_sort_proximity">Orden por proximidad</string>
+    <string name="pref_grid_layout">Vista en cuadrícula (teléfonos)</string>
+    <string name="location_permission_rationale">Se necesitan permisos de ubicación para ordenar por distancia respecto a tu posición.</string>
+    <string name="location_permission_denied">No se pueden usar los permisos de ubicación; el orden por proximidad no está disponible.</string>
+    <string name="location_unavailable">No se obtuvo ubicación reciente del dispositivo; prueba más tarde o activa los servicios de localización.</string>
+    <string name="map_placeholder">Mapa de empresas turísticas Activas Asturias</string>
     <string name="detail_loading">Cargando…</string>
     <string name="detail_not_found">Empresa no encontrada.</string>
     <string name="detail_zona_label">Zona de actividad: %s</string>

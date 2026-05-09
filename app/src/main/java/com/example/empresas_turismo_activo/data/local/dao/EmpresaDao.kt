@@ -1,5 +1,6 @@
 package com.example.empresas_turismo_activo.data.local.dao
 
+import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -26,6 +27,11 @@ interface EmpresaDao {
     /** Devuelve la fila cuyo id coincide exactamente o null cuando no existe registro alguno. */
     @Query("SELECT * FROM empresas_table WHERE id = :id LIMIT 1")
     suspend fun getEmpresaById(id: String): EmpresaEntity?
+
+    /** Solo pruebas: vacía el catálogo local. */
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+    @Query("DELETE FROM empresas_table")
+    suspend fun clearAllCompanies()
 
     /**
      * Filtra por nombre comercial, localidad, zona de actividad o coincidencia textual dentro del JSON serializado de actividades

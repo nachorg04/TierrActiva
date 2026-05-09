@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Active Tourism Asturias</string>
+    <string name="nav_list">List</string>
+    <string name="nav_map">Map</string>
+    <string name="screen_list">Companies</string>
+    <string name="screen_map">Map</string>
+    <string name="screen_detail">Details</string>
+    <string name="filter_by_name">Name</string>
+    <string name="filter_by_localidad">Locality</string>
+    <string name="list_sort_alphabet">Alphabetical</string>
+    <string name="list_sort_proximity">Sort by proximity</string>
+    <string name="pref_grid_layout">Grid view (phones)</string>
+    <string name="location_permission_rationale">Location permission is needed to sort by distance from you.</string>
+    <string name="location_permission_denied">Location permission was denied; proximity sorting cannot be used.</string>
+    <string name="location_unavailable">No recent device location available; try again later or enable location services.</string>
+    <string name="map_placeholder">Map of active tourism companies in Asturias</string>
+    <string name="detail_loading">Loading…</string>
+    <string name="detail_not_found">Company not found.</string>
+    <string name="detail_zona_label">Activity area: %s</string>
+    <string name="detail_actividades_titulo">Activities</string>
+    <string name="detail_sin_actividades">No listed activities.</string>
+    <string name="detail_activity_image_desc">Activity image</string>
+</resources>
