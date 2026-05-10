@@ -89,6 +89,18 @@ class ListViewModel(
             proximitySortSelected = sortMode.value == ListaSortMode.BY_PROXIMITY,
         )
 
+    /**
+     * Estado de filtros y opciones tal como están en el ViewModel (sobrevive rotación de pantalla).
+     * La vista lo usa para rellenar campos sin volver a leer preferencias, que podrían estar desactualizadas.
+     */
+    fun readPersistableUiState(): ListPersistedState =
+        ListPersistedState(
+            nombreFilter = nombreFilter.value,
+            localidadFilter = localidadFilter.value,
+            preferGridOnMobile = _preferGridOnMobile.value,
+            proximitySortSelected = sortMode.value == ListaSortMode.BY_PROXIMITY,
+        )
+
     fun setNombreFilter(text: String) {
         nombreFilter.value = text
     }

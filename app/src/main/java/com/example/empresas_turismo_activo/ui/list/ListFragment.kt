@@ -22,7 +22,9 @@ import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentListBinding
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.snackbar.Snackbar
+import com.example.empresas_turismo_activo.data.preferences.ListPersistedState
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Listado principal con filtros declarativos, orden por proximidad y gestión adaptable del LayoutManager para tablet frente a móvil.
@@ -83,32 +85,26 @@ class ListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.recyclerEmpresas.adapter = adapter
 
-        lifecycleScope.launch {
-            val persisted = listPreferences.load()
-            viewModel.restorePersisted(persisted)
-            binding.inputFilterNombre.setText(persisted.nombreFilter)
-            binding.inputFilterLocalidad.setText(persisted.localidadFilter)
-            configurePreferGridUi()
-            binding.switchPreferGrid.setOnCheckedChangeListener(null)
-            binding.switchPreferGrid.isChecked =
-                persisted.preferGridOnMobile && tabletSpanCount() == 1
-            binding.switchPreferGrid.setOnCheckedChangeListener { _, isChecked ->
-                viewModel.setPreferGridOnMobile(isChecked)
-                applyRecyclerLayout(binding.switchPreferGrid.isChecked)
+        if (savedInstanceState != null) {
+            applyListControlsFromSnapshot(viewModel.readPersistableUiState())
+        } else {
+            lifecycleScope.launch {
+                val persisted = listPreferences.load()
+                viewModel.restorePersisted(persisted)
+                applyListControlsFromSnapshot(persisted)
             }
-            binding.inputFilterNombre.doAfterTextChanged { text ->
-                viewModel.setNombreFilter(text?.toString().orEmpty())
-            }
-            binding.inputFilterLocalidad.doAfterTextChanged { text ->
-                viewModel.setLocalidadFilter(text?.toString().orEmpty())
-            }
-            binding.buttonSortAlphabet.setOnClickListener {
-                viewModel.setAlphabetSort()
-            }
-            binding.buttonSortProximity.setOnClickListener {
-                onProximityButtonClicked()
-            }
-            applyRecyclerLayout(binding.switchPreferGrid.isChecked)
+        }
+        binding.inputFilterNombre.doAfterTextChanged { text ->
+            viewModel.setNombreFilter(text?.toString().orEmpty())
+        }
+        binding.inputFilterLocalidad.doAfterTextChanged { text ->
+            viewModel.setLocalidadFilter(text?.toString().orEmpty())
+        }
+        binding.buttonSortAlphabet.setOnClickListener {
+            viewModel.setAlphabetSort()
+        }
+        binding.buttonSortProximity.setOnClickListener {
+            onProximityButtonClicked()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -122,6 +118,21 @@ class ListFragment : Fragment() {
 
     private fun tabletSpanCount(): Int =
         resources.getInteger(R.integer.list_span_count)
+
+    /** Rellena filtros y conmutadores desde un snapshot (preferencias o ViewModel tras rotación). */
+    private fun applyListControlsFromSnapshot(snapshot: ListPersistedState) {
+        binding.inputFilterNombre.setText(snapshot.nombreFilter)
+        binding.inputFilterLocalidad.setText(snapshot.localidadFilter)
+        configurePreferGridUi()
+        binding.switchPreferGrid.setOnCheckedChangeListener(null)
+        binding.switchPreferGrid.isChecked =
+            snapshot.preferGridOnMobile && tabletSpanCount() == 1
+        binding.switchPreferGrid.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setPreferGridOnMobile(isChecked)
+            applyRecyclerLayout(binding.switchPreferGrid.isChecked)
+        }
+        applyRecyclerLayout(binding.switchPreferGrid.isChecked)
+    }
 
     private fun configurePreferGridUi() {
         val tablet = tabletSpanCount() > 1
@@ -193,7 +204,7 @@ class ListFragment : Fragment() {
     override fun onStop() {
         val nombre = binding.inputFilterNombre.text?.toString().orEmpty()
         val loc = binding.inputFilterLocalidad.text?.toString().orEmpty()
-        viewLifecycleOwner.lifecycleScope.launch {
+        runBlocking {
             listPreferences.save(viewModel.buildPersistSnapshot(nombre, loc))
         }
         super.onStop()
