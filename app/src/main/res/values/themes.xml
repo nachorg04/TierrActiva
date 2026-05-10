@@ -1,5 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Empresas_Turismo_Activo" parent="Theme.Material3.Light.NoActionBar" />
+    <style name="Theme.Empresas_Turismo_Activo" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Widget.Empresas_Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextAppearance">@style/TextAppearance.Empresas.ToolbarTitle</item>
+        <item name="subtitleTextAppearance">@style/TextAppearance.Empresas.ToolbarTitle</item>
+    </style>
+
+    <!-- Negrita + sans-serif (legible y cercano a la tipografía Material del sistema) -->
+    <style name="TextAppearance.Empresas.ToolbarTitle" parent="TextAppearance.Material3.ActionBar.Title">
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Etiquetas sin padding de fuente extra: evita que el texto “empuje” el icono hacia arriba -->
+    <style name="TextAppearance.Empresas.BottomNav" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- itemGravity center: el bloque icono+texto queda centrado en la barra (M3 por defecto es top-center) -->
+    <style name="Widget.Empresas.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:minHeight">@dimen/bottom_nav_min_height</item>
+        <item name="itemGravity">center</item>
+        <item name="itemPaddingTop">@dimen/bottom_nav_item_padding_vertical</item>
+        <item name="itemPaddingBottom">@dimen/bottom_nav_item_padding_vertical</item>
+        <item name="itemIconSize">22dp</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.Empresas.BottomNav</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.Empresas.BottomNav</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+    </style>
 </resources>

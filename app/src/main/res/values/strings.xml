@@ -21,4 +21,12 @@
     <string name="detail_actividades_titulo">Actividades</string>
     <string name="detail_sin_actividades">No hay actividades listadas.</string>
     <string name="detail_activity_image_desc">Imagen de la actividad</string>
+    <string name="language_menu_title">Idioma</string>
+    <string name="language_choose">Elegir idioma</string>
+    <string name="language_system">Según el sistema</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_english">English</string>
+    <string name="night_mode_menu_title">Modo claro u oscuro</string>
+    <string name="night_mode_content_desc_dark">Activar modo oscuro</string>
+    <string name="night_mode_content_desc_light">Activar modo claro</string>
 </resources>

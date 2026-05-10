@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- En horizontal el alto es limitado: menos padding extra bajo notch -->
+    <dimen name="top_content_safe_extra">4dp</dimen>
+    <!-- Solo iconos: barra más baja que en vertical -->
+    <dimen name="bottom_nav_min_height">48dp</dimen>
+</resources>

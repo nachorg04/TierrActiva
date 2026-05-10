@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="map_bounds_padding">96dp</dimen>
+    <!-- Aire extra bajo cámara / recorte además de los insets del sistema -->
+    <dimen name="top_content_safe_extra">16dp</dimen>
+    <!-- Barra inferior: algo más compacta; padding V simétrico para centrar iconos -->
+    <dimen name="bottom_nav_min_height">60dp</dimen>
+    <dimen name="bottom_nav_item_padding_vertical">5dp</dimen>
 </resources>
