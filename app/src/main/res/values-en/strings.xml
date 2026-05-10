@@ -29,4 +29,9 @@
     <string name="night_mode_menu_title">Light or dark theme</string>
     <string name="night_mode_content_desc_dark">Enable dark mode</string>
     <string name="night_mode_content_desc_light">Enable light mode</string>
+    <string name="filter_category_button_all">Category: All</string>
+    <string name="filter_category_button_selected">Category: %1$s</string>
+    <string name="filter_category_dialog_title">Filter by category</string>
+    <string name="filter_category_all">All</string>
+    <string name="filter_category_content_desc">Filter by activity category</string>
 </resources>

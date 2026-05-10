@@ -29,4 +29,9 @@
     <string name="night_mode_menu_title">Modo claro u oscuro</string>
     <string name="night_mode_content_desc_dark">Activar modo oscuro</string>
     <string name="night_mode_content_desc_light">Activar modo claro</string>
+    <string name="filter_category_button_all">Categoría: Todas</string>
+    <string name="filter_category_button_selected">Categoría: %1$s</string>
+    <string name="filter_category_dialog_title">Filtrar por categoría</string>
+    <string name="filter_category_all">Todas</string>
+    <string name="filter_category_content_desc">Filtrar por categoría de actividad</string>
 </resources>

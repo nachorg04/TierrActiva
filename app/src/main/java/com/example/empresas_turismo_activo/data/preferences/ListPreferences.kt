@@ -13,6 +13,7 @@ private val Context.listUiDataStore by preferencesDataStore(name = "list_ui")
 data class ListPersistedState(
     val nombreFilter: String = "",
     val localidadFilter: String = "",
+    val categoriaFiltro: String? = null,
     val preferGridOnMobile: Boolean = false,
     val proximitySortSelected: Boolean = false,
 )
@@ -26,6 +27,7 @@ class ListPreferences(context: Context) {
         return ListPersistedState(
             nombreFilter = p[KEY_FILTER_NOMBRE] ?: "",
             localidadFilter = p[KEY_FILTER_LOCALIDAD] ?: "",
+            categoriaFiltro = p[KEY_FILTER_CATEGORIA]?.takeUnless { it.isBlank() },
             preferGridOnMobile = p[KEY_PREF_GRID_MOBILE] ?: false,
             proximitySortSelected = p[KEY_PROXIMITY_SORT] ?: false,
         )
@@ -35,6 +37,7 @@ class ListPreferences(context: Context) {
         appContext.listUiDataStore.edit { prefs ->
             prefs[KEY_FILTER_NOMBRE] = state.nombreFilter
             prefs[KEY_FILTER_LOCALIDAD] = state.localidadFilter
+            prefs[KEY_FILTER_CATEGORIA] = state.categoriaFiltro.orEmpty()
             prefs[KEY_PREF_GRID_MOBILE] = state.preferGridOnMobile
             prefs[KEY_PROXIMITY_SORT] = state.proximitySortSelected
         }
@@ -43,6 +46,7 @@ class ListPreferences(context: Context) {
     companion object {
         private val KEY_FILTER_NOMBRE = stringPreferencesKey("filter_nombre")
         private val KEY_FILTER_LOCALIDAD = stringPreferencesKey("filter_localidad")
+        private val KEY_FILTER_CATEGORIA = stringPreferencesKey("filter_categoria")
         private val KEY_PREF_GRID_MOBILE = booleanPreferencesKey("pref_grid_mobile")
         private val KEY_PROXIMITY_SORT = booleanPreferencesKey("proximity_sort")
     }

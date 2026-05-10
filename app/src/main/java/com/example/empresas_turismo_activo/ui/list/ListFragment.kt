@@ -21,6 +21,7 @@ import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentListBinding
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.example.empresas_turismo_activo.data.preferences.ListPersistedState
 import kotlinx.coroutines.launch
@@ -33,6 +34,9 @@ class ListFragment : Fragment() {
 
     private var _binding: FragmentListBinding? = null
     private val binding get() = requireNotNull(_binding)
+
+    /** Copia para el diálogo; se actualiza al observar [ListViewModel.categoriasDisponibles]. */
+    private var categoriasParaDialogo: List<String> = emptyList()
 
     private val viewModel: ListViewModel by viewModels {
         val repo = (requireActivity().application as TurismoApplication).empresaRepository
@@ -107,10 +111,26 @@ class ListFragment : Fragment() {
             onProximityButtonClicked()
         }
 
+        binding.buttonFilterCategoria.setOnClickListener {
+            showCategoryFilterDialog()
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.empresas.collect { empresas ->
-                    adapter.submitList(empresas)
+                launch {
+                    viewModel.empresas.collect { empresas ->
+                        adapter.submitList(empresas)
+                    }
+                }
+                launch {
+                    viewModel.categoriasDisponibles.collect { cats ->
+                        categoriasParaDialogo = cats
+                    }
+                }
+                launch {
+                    viewModel.categoriaFiltroSeleccionada.collect { seleccion ->
+                        bindCategoryFilterButtonLabel(seleccion)
+                    }
                 }
             }
         }
@@ -132,6 +152,33 @@ class ListFragment : Fragment() {
             applyRecyclerLayout(binding.switchPreferGrid.isChecked)
         }
         applyRecyclerLayout(binding.switchPreferGrid.isChecked)
+        bindCategoryFilterButtonLabel(snapshot.categoriaFiltro)
+    }
+
+    private fun bindCategoryFilterButtonLabel(categoriaSeleccionada: String?) {
+        binding.buttonFilterCategoria.text =
+            if (categoriaSeleccionada.isNullOrBlank()) {
+                getString(R.string.filter_category_button_all)
+            } else {
+                getString(R.string.filter_category_button_selected, categoriaSeleccionada)
+            }
+    }
+
+    private fun showCategoryFilterDialog() {
+        val titulos = buildList {
+            add(getString(R.string.filter_category_all))
+            addAll(categoriasParaDialogo)
+        }.toTypedArray()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.filter_category_dialog_title)
+            .setItems(titulos) { dialog, which ->
+                when (which) {
+                    0 -> viewModel.setCategoriaFiltro(null)
+                    else -> viewModel.setCategoriaFiltro(categoriasParaDialogo[which - 1])
+                }
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun configurePreferGridUi() {

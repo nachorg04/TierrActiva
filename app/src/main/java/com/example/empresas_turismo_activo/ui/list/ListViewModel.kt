@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -22,7 +23,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 enum class ListaSortMode { ALPHABETIC, BY_PROXIMITY }
 
 /**
- * Lista desde Room: la búsqueda y localidad se resuelven con SQL en DAO/repositorio; aquí sólo ordenación.
+ * Lista desde Room: búsqueda y localidad en SQL; categoría seleccionada en capa UI; ordenación aquí.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModel(
@@ -40,6 +41,7 @@ class ListViewModel(
 
     private val nombreFilter = MutableStateFlow("")
     private val localidadFilter = MutableStateFlow("")
+    private val categoriaFiltro = MutableStateFlow<String?>(null)
     private val sortMode = MutableStateFlow(ListaSortMode.ALPHABETIC)
     /**
      * Última posición conocida del usuario desde Fused Location; sólo ordena cuando [sortMode]
@@ -49,27 +51,51 @@ class ListViewModel(
     private val _preferGridOnMobile = MutableStateFlow(false)
     val preferGridOnMobile: StateFlow<Boolean> = _preferGridOnMobile.asStateFlow()
 
-    val empresas: StateFlow<List<Empresa>> = combine(nombreFilter, localidadFilter) { nombre, loc ->
-        nombre to loc
-    }.distinctUntilChanged()
-        .flatMapLatest { (nombre, loc) ->
-            combine(
-                repository.observeFilteredEmpresas(nombre, loc),
-                sortMode,
-                userLatLng,
-            ) { listadoFiltrado, mode, ubicacionUsuario ->
-                ordenarLista(listadoFiltrado, mode, ubicacionUsuario)
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
-        )
+    val categoriaFiltroSeleccionada: StateFlow<String?> = categoriaFiltro.asStateFlow()
+
+    val categoriasDisponibles: StateFlow<List<String>> =
+        repository.observeEmpresas()
+            .map { catalogo -> distinctCategoriesSorted(catalogo) }
+            .distinctUntilChanged()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList(),
+            )
+
+    val empresas: StateFlow<List<Empresa>> =
+        combine(nombreFilter, localidadFilter, categoriaFiltro) { nombre, loc, cat ->
+            Triple(nombre, loc, cat)
+        }.distinctUntilChanged()
+            .flatMapLatest { (nombre, loc, cat) ->
+                combine(
+                    repository.observeFilteredEmpresas(nombre, loc),
+                    sortMode,
+                    userLatLng,
+                ) { listadoSql, mode, ubicacionUsuario ->
+                    val despuesDeCategoria =
+                        if (cat.isNullOrBlank()) {
+                            listadoSql
+                        } else {
+                            listadoSql.filter { empresa ->
+                                empresa.informacion.actividades.any { actividad ->
+                                    actividad.categoria.equals(cat, ignoreCase = true)
+                                }
+                            }
+                        }
+                    ordenarLista(despuesDeCategoria, mode, ubicacionUsuario)
+                }
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList(),
+            )
 
     /** Restaura filtros persistidos antes de registrar listeners textuales. */
     fun restorePersisted(snapshot: ListPersistedState) {
         nombreFilter.value = snapshot.nombreFilter
         localidadFilter.value = snapshot.localidadFilter
+        categoriaFiltro.value = snapshot.categoriaFiltro?.takeUnless { it.isBlank() }
         _preferGridOnMobile.value = snapshot.preferGridOnMobile
         sortMode.value =
             if (snapshot.proximitySortSelected) ListaSortMode.BY_PROXIMITY else ListaSortMode.ALPHABETIC
@@ -83,6 +109,7 @@ class ListViewModel(
         ListPersistedState(
             nombreFilter = nombreFromField,
             localidadFilter = localidadFromField,
+            categoriaFiltro = categoriaFiltro.value?.takeUnless { it.isBlank() },
             preferGridOnMobile = _preferGridOnMobile.value,
             proximitySortSelected = sortMode.value == ListaSortMode.BY_PROXIMITY,
         )
@@ -95,6 +122,7 @@ class ListViewModel(
         ListPersistedState(
             nombreFilter = nombreFilter.value,
             localidadFilter = localidadFilter.value,
+            categoriaFiltro = categoriaFiltro.value?.takeUnless { it.isBlank() },
             preferGridOnMobile = _preferGridOnMobile.value,
             proximitySortSelected = sortMode.value == ListaSortMode.BY_PROXIMITY,
         )
@@ -105,6 +133,11 @@ class ListViewModel(
 
     fun setLocalidadFilter(text: String) {
         localidadFilter.value = text
+    }
+
+    fun setCategoriaFiltro(categoria: String?) {
+        val t = categoria?.trim().orEmpty()
+        categoriaFiltro.value = t.ifEmpty { null }
     }
 
     fun setAlphabetSort() {
@@ -129,6 +162,23 @@ class ListViewModel(
     }
 
     companion object {
+        private fun distinctCategoriesSorted(empresas: List<Empresa>): List<String> {
+            val byLowerKey = LinkedHashMap<String, String>()
+            for (empresa in empresas) {
+                for (actividad in empresa.informacion.actividades) {
+                    val c = actividad.categoria.trim()
+                    if (c.isEmpty()) continue
+                    val key = c.lowercase(Locale.getDefault())
+                    if (!byLowerKey.containsKey(key)) {
+                        byLowerKey[key] = c
+                    }
+                }
+            }
+            return byLowerKey.values.sortedWith(
+                compareBy { it.lowercase(Locale.getDefault()) },
+            )
+        }
+
         private fun ordenarLista(
             filtradas: List<Empresa>,
             mode: ListaSortMode,

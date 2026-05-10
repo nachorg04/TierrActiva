@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Horizontal: filtros a la izquierda (scroll), lista a la derecha a altura completa. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -45,6 +46,18 @@
                     android:importantForAutofill="no"
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonFilterCategoria"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:contentDescription="@string/filter_category_content_desc"
+                android:text="@string/filter_category_button_all"
+                app:icon="@drawable/ic_filter_list_24"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"

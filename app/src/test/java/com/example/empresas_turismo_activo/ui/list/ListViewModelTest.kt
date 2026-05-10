@@ -203,6 +203,7 @@ class ListViewModelTest {
     fun filtros_MockitoObserveEmpresa_flujo_se_conecta() = runTest(mainDispatcherRule.dispatcher) {
         val repo: EmpresaRepository = mock()
         val samples = listOf(empresa("1", "A", "Gijón", 43.532, -5.661))
+        whenever(repo.observeEmpresas()).thenReturn(flowOf(samples))
         whenever(repo.observeFilteredEmpresas(any(), any())).thenAnswer { inv ->
             val g = inv.getArgument<String>(0).trim()
             val l = inv.getArgument<String>(1).trim()
@@ -232,6 +233,77 @@ class ListViewModelTest {
         }
     }
 
+    @Test
+    fun categoriasDisponibles_unicas_case_insensitive_y_orden_alfabetico() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val aguaMinus = Actividad(nombre = "Río", imagenUrl = "", categoria = "agua")
+            val aguaMayus = Actividad(nombre = "Lago", imagenUrl = "", categoria = "AGUA")
+            val tierra = Actividad(nombre = "Ruta", imagenUrl = "", categoria = "Tierra")
+            val fake = FakeEmpresaRepository(
+                listOf(
+                    empresa("1", "A", "X", 43.4, -5.8, actividades = listOf(aguaMinus)),
+                    empresa(
+                        "2",
+                        "B",
+                        "X",
+                        43.4,
+                        -5.8,
+                        actividades = listOf(tierra, aguaMayus),
+                    ),
+                ),
+            )
+            val vm = ListViewModel(fake, performInitialSync = false)
+
+            collectEmpresasYCategorias(vm) {
+                advanceUntilIdle()
+                assertEquals(listOf("agua", "Tierra"), vm.categoriasDisponibles.value)
+            }
+        }
+
+    @Test
+    fun categoria_filtro_se_combina_con_busqueda_global() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val agua = Actividad(nombre = "Kayak", imagenUrl = "", categoria = "agua")
+            val monte = Actividad(nombre = "Trekking", imagenUrl = "", categoria = "montaña")
+            val fake = FakeEmpresaRepository(
+                listOf(
+                    empresa("1", "Rafting Norte", "Llanes", 43.39, -4.75, actividades = listOf(agua)),
+                    empresa("2", "Rafting Sur", "Llanes", 43.39, -4.75, actividades = listOf(monte)),
+                    empresa("3", "Otro", "Oviedo", 43.36, -5.85, actividades = listOf(agua)),
+                ),
+            )
+            val vm = ListViewModel(fake, performInitialSync = false)
+
+            collectEmpresasYCategorias(vm) {
+                vm.setNombreFilter("rafting")
+                advanceUntilIdle()
+                assertEquals(setOf("1", "2"), vm.empresas.value.map { it.id }.toSet())
+
+                vm.setCategoriaFiltro("agua")
+                advanceUntilIdle()
+                assertEquals(1, vm.empresas.value.size)
+                assertEquals("1", vm.empresas.value.single().id)
+
+                vm.setCategoriaFiltro(null)
+                vm.setNombreFilter("")
+                vm.setLocalidadFilter("Ovied")
+                advanceUntilIdle()
+                assertEquals(1, vm.empresas.value.size)
+                assertEquals("3", vm.empresas.value.single().id)
+
+                vm.setCategoriaFiltro("Montaña") // igualdad ignoreCase respecto a "montaña"
+                advanceUntilIdle()
+                assertEquals(0, vm.empresas.value.size)
+
+                vm.setLocalidadFilter("Llanes")
+                vm.setNombreFilter("rafting")
+                advanceUntilIdle()
+                vm.setCategoriaFiltro("montaña")
+                advanceUntilIdle()
+                assertEquals("2", vm.empresas.value.single().id)
+            }
+        }
+
 }
 
 /** Activa suscriptores de [ListViewModel.empresas] porque el flujo usa [SharingStarted.WhileSubscribed]. */
@@ -242,5 +314,20 @@ private suspend fun TestScope.collectEmpresas(vm: ListViewModel, block: suspend 
         block()
     } finally {
         job.cancel()
+    }
+}
+
+private suspend fun TestScope.collectEmpresasYCategorias(
+    vm: ListViewModel,
+    block: suspend () -> Unit,
+) {
+    val jobEmpresas = backgroundScope.launch { vm.empresas.collect {} }
+    val jobCategorias = backgroundScope.launch { vm.categoriasDisponibles.collect {} }
+    advanceUntilIdle()
+    try {
+        block()
+    } finally {
+        jobEmpresas.cancel()
+        jobCategorias.cancel()
     }
 }
