@@ -2,6 +2,7 @@ package com.example.empresas_turismo_activo.ui.list
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentListBinding
@@ -24,6 +26,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.example.empresas_turismo_activo.data.preferences.ListPersistedState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -36,6 +40,31 @@ class ListFragment : Fragment() {
 
     /** Copia para el diálogo; se actualiza al observar [ListViewModel.categoriasDisponibles]. */
     private var categoriasParaDialogo: List<String> = emptyList()
+
+    /**
+     * Tras filtros manualmente, el Recycler conserva offset; ordenar o buscar hace pensar que "no pasó nada".
+     * Se marca true en acciones explícitas; el commit de DiffUtil ejecuta scroll a 0 cuando la lista refleje el nuevo estado.
+     */
+    private var scrollListToTopAfterNextListSubmit = false
+
+    private var suppressFilterScrollCallbacks = false
+
+    /** Evita disparar scroll al recuperar filtros desde DataStore/SavedState durante setText programático. */
+    private var searchScrollDebouncerJob: Job? = null
+
+    /** En vertical/portrait el panel flota sobre el listado; en landscape el layout usa dos columnas fijas sin overlay. */
+    private fun useFiltersHeaderOverlayBehavior(): Boolean =
+        resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE
+
+    /**
+     * Solo en modo vertical ([useFiltersHeaderOverlayBehavior]): el header sigue el [translationY] con el gesto vertical.
+     */
+    private val empresaListRecyclerScrollListener =
+        object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                offsetFiltersHeaderWithListScroll(recyclerView, dy)
+            }
+        }
 
     private val viewModel: ListViewModel by viewModels {
         val repo = (requireActivity().application as TurismoApplication).empresaRepository
@@ -89,6 +118,8 @@ class ListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.recyclerEmpresas.adapter = adapter
+        binding.recyclerEmpresas.addOnScrollListener(empresaListRecyclerScrollListener)
+        binding.listFiltersHeader.translationY = 0f
 
         if (savedInstanceState != null) {
             applyListControlsFromSnapshot(viewModel.readPersistableUiState())
@@ -102,11 +133,14 @@ class ListFragment : Fragment() {
         }
         binding.inputFilterNombre.doAfterTextChanged { text ->
             viewModel.setNombreFilter(text?.toString().orEmpty())
+            if (!suppressFilterScrollCallbacks) scheduleScrollToTopDebouncedForSearchInput()
         }
         binding.inputFilterLocalidad.doAfterTextChanged { text ->
             viewModel.setLocalidadFilter(text?.toString().orEmpty())
+            if (!suppressFilterScrollCallbacks) scheduleScrollToTopDebouncedForSearchInput()
         }
         binding.buttonSortAlphabet.setOnClickListener {
+            requestScrollToTopAfterNextEmpresasCommit()
             viewModel.setAlphabetSort()
         }
         binding.buttonSortProximity.setOnClickListener {
@@ -121,7 +155,13 @@ class ListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.empresas.collect { empresas ->
-                        adapter.submitList(empresas)
+                        adapter.submitList(empresas) {
+                            if (scrollListToTopAfterNextListSubmit && _binding != null) {
+                                binding.recyclerEmpresas.scrollToPosition(0)
+                                scrollListToTopAfterNextListSubmit = false
+                                resetFiltersHeaderTranslation()
+                            }
+                        }
                     }
                 }
                 launch {
@@ -138,13 +178,64 @@ class ListFragment : Fragment() {
         }
     }
 
+    private fun requestScrollToTopAfterNextEmpresasCommit() {
+        scrollListToTopAfterNextListSubmit = true
+    }
+
+    private fun scheduleScrollToTopDebouncedForSearchInput() {
+        searchScrollDebouncerJob?.cancel()
+        searchScrollDebouncerJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(REQUEST_SCROLL_SEARCH_DEBOUNCE_MS)
+            scrollListToTopAfterNextListSubmit = true
+        }
+    }
+
     private fun tabletSpanCount(): Int =
         resources.getInteger(R.integer.list_span_count)
 
+    private fun resetFiltersHeaderTranslation() {
+        if (_binding == null) return
+        binding.listFiltersHeader.translationY = 0f
+    }
+
+    /** Desplaza el panel de filtros en sync con los píxeles verticales que se desplaza el RecyclerView. */
+    private fun offsetFiltersHeaderWithListScroll(recyclerView: RecyclerView, dy: Int) {
+        if (_binding == null || dy == 0) return
+        if (!useFiltersHeaderOverlayBehavior()) return
+        val header = binding.listFiltersHeader
+        applyHeaderOffsetWithMeasuredHeight(header, recyclerView, dy)
+    }
+
+    private fun applyHeaderOffsetWithMeasuredHeight(header: View, recyclerView: RecyclerView, dy: Int) {
+        fun applyMeasured(hPx: Int) {
+            if (hPx <= 0) return
+            val maxUp = -hPx.toFloat()
+            if (!recyclerView.canScrollVertically(-1)) {
+                header.translationY = 0f
+                return
+            }
+            header.translationY = (header.translationY - dy.toFloat()).coerceIn(maxUp, 0f)
+        }
+        val measured = header.height
+        if (measured > 0) {
+            applyMeasured(measured)
+        } else {
+            header.post {
+                if (_binding == null) return@post
+                val hPost = binding.listFiltersHeader.height
+                if (recyclerView == binding.recyclerEmpresas && hPost > 0) {
+                    applyMeasured(hPost)
+                }
+            }
+        }
+    }
+
     /** Rellena filtros y conmutadores desde un snapshot (preferencias o ViewModel tras rotación). */
     private fun applyListControlsFromSnapshot(snapshot: ListPersistedState) {
+        suppressFilterScrollCallbacks = true
         binding.inputFilterNombre.setText(snapshot.nombreFilter)
         binding.inputFilterLocalidad.setText(snapshot.localidadFilter)
+        suppressFilterScrollCallbacks = false
         configurePreferGridUi()
         binding.switchPreferGrid.setOnCheckedChangeListener(null)
         binding.switchPreferGrid.isChecked =
@@ -174,6 +265,7 @@ class ListFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.filter_category_dialog_title)
             .setItems(titulos) { dialog, which ->
+                requestScrollToTopAfterNextEmpresasCommit()
                 when (which) {
                     0 -> viewModel.setCategoriaFiltro(null)
                     else -> viewModel.setCategoriaFiltro(categoriasParaDialogo[which - 1])
@@ -218,6 +310,7 @@ class ListFragment : Fragment() {
                 }
                 val location = completed.result
                 if (location != null) {
+                    requestScrollToTopAfterNextEmpresasCommit()
                     viewModel.updateUserLatLng(location.latitude, location.longitude)
                     viewModel.setProximitySort()
                 } else {
@@ -250,6 +343,7 @@ class ListFragment : Fragment() {
             preferColumnsOnMobile -> GridLayoutManager(requireContext(), 2)
             else -> LinearLayoutManager(requireContext())
         }
+        resetFiltersHeaderTranslation()
     }
 
     override fun onStop() {
@@ -263,7 +357,14 @@ class ListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        searchScrollDebouncerJob?.cancel()
+        searchScrollDebouncerJob = null
+        binding.recyclerEmpresas.removeOnScrollListener(empresaListRecyclerScrollListener)
         binding.recyclerEmpresas.adapter = null
         _binding = null
+    }
+
+    companion object {
+        private const val REQUEST_SCROLL_SEARCH_DEBOUNCE_MS = 325L
     }
 }
