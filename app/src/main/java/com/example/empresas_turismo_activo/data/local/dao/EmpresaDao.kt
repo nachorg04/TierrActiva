@@ -34,21 +34,24 @@ interface EmpresaDao {
     suspend fun clearAllCompanies()
 
     /**
-     * Filtra por nombre comercial, localidad, zona de actividad o coincidencia textual dentro del JSON serializado de actividades
-     * (nombre o categoría). Una consulta vacía devuelve todo el catálogo respetando el mismo orden alfabético.
+     * Catálogo filtrado en base de datos: búsqueda global sobre nombre, dirección y JSON de actividades
+     * más filtro opcional por localidad. Cadenas vacías (solo espacios) no aplican ese criterio.
      */
     @Query(
         """
         SELECT * FROM empresas_table
         WHERE (
-            TRIM(:query) = '' OR
-            nombre LIKE '%' || TRIM(:query) || '%' OR
-            localidad LIKE '%' || TRIM(:query) || '%' OR
-            zona_actividad LIKE '%' || TRIM(:query) || '%' OR
-            actividades LIKE '%' || TRIM(:query) || '%'
+            TRIM(:globalQuery) = '' OR
+            nombre LIKE '%' || TRIM(:globalQuery) || '%' COLLATE NOCASE OR
+            (direccion IS NOT NULL AND direccion LIKE '%' || TRIM(:globalQuery) || '%' COLLATE NOCASE) OR
+            actividades LIKE '%' || TRIM(:globalQuery) || '%' COLLATE NOCASE
+        )
+        AND (
+            TRIM(:localidadQuery) = '' OR
+            localidad LIKE '%' || TRIM(:localidadQuery) || '%' COLLATE NOCASE
         )
         ORDER BY nombre COLLATE NOCASE ASC
         """,
     )
-    fun searchEmpresas(query: String): Flow<List<EmpresaEntity>>
+    fun observeFilteredEmpresas(globalQuery: String, localidadQuery: String): Flow<List<EmpresaEntity>>
 }

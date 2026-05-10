@@ -12,15 +12,19 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 enum class ListaSortMode { ALPHABETIC, BY_PROXIMITY }
 
 /**
- * Lista desde Room aplicando filtros locales y orden alfabético o por proximidad respecto al usuario.
+ * Lista desde Room: la búsqueda y localidad se resuelven con SQL en DAO/repositorio; aquí sólo ordenación.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModel(
     private val repository: EmpresaRepository,
     performInitialSync: Boolean = true,
@@ -45,28 +49,22 @@ class ListViewModel(
     private val _preferGridOnMobile = MutableStateFlow(false)
     val preferGridOnMobile: StateFlow<Boolean> = _preferGridOnMobile.asStateFlow()
 
-    val empresas: StateFlow<List<Empresa>> = combine(
-        repository.observeEmpresas(),
-        nombreFilter,
-        localidadFilter,
-        sortMode,
-        userLatLng,
-    ) { listado, nombre, localidad, mode, ubicacionUsuario ->
-        val filtered = listado.filter { empresa ->
-            val nombreOk =
-                nombre.isBlank() ||
-                    empresa.nombre.contains(nombre.trim(), ignoreCase = true)
-            val localidadOk =
-                localidad.isBlank() ||
-                    empresa.contacto.localidad.contains(localidad.trim(), ignoreCase = true)
-            nombreOk && localidadOk
-        }
-        ordenarLista(filtered, mode, ubicacionUsuario)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList(),
-    )
+    val empresas: StateFlow<List<Empresa>> = combine(nombreFilter, localidadFilter) { nombre, loc ->
+        nombre to loc
+    }.distinctUntilChanged()
+        .flatMapLatest { (nombre, loc) ->
+            combine(
+                repository.observeFilteredEmpresas(nombre, loc),
+                sortMode,
+                userLatLng,
+            ) { listadoFiltrado, mode, ubicacionUsuario ->
+                ordenarLista(listadoFiltrado, mode, ubicacionUsuario)
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
+        )
 
     /** Restaura filtros persistidos antes de registrar listeners textuales. */
     fun restorePersisted(snapshot: ListPersistedState) {

@@ -4,6 +4,7 @@ package com.example.empresas_turismo_activo.ui.list
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.example.empresas_turismo_activo.CoroutineMainRule
 import com.example.empresas_turismo_activo.domain.model.Contacto
+import com.example.empresas_turismo_activo.domain.model.Actividad
 import com.example.empresas_turismo_activo.domain.model.Coordenadas
 import com.example.empresas_turismo_activo.domain.model.Empresa
 import com.example.empresas_turismo_activo.domain.model.Informacion
@@ -19,6 +20,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import kotlinx.coroutines.test.TestScope
+import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -35,12 +38,14 @@ class ListViewModelTest {
         localidad: String,
         lat: Double,
         lng: Double,
+        direccion: String? = null,
+        actividades: List<Actividad> = emptyList(),
     ): Empresa = Empresa(
         id = id,
         nombre = nombre,
         contacto = Contacto(
             concejo = "Candás",
-            direccion = null,
+            direccion = direccion,
             localidad = localidad,
             telefonos = emptyList(),
             emails = emptyList(),
@@ -53,9 +58,65 @@ class ListViewModelTest {
             titulo = "",
             descripcion = "",
             zonaActividad = "",
-            actividades = emptyList(),
+            actividades = actividades,
         ),
     )
+
+    @Test
+    fun filtros_filtraPorDireccion() = runTest(mainDispatcherRule.dispatcher) {
+        val fake = FakeEmpresaRepository(
+            listOf(
+                empresa("1", "Empresa Uno", "Llanes", 43.39, -4.75, direccion = "Calle Mayor 12"),
+                empresa("2", "Empresa Dos", "Oviedo", 43.36, -5.85, direccion = "Plaza Uria 5"),
+            ),
+        )
+        val vm = ListViewModel(fake, performInitialSync = false)
+
+        collectEmpresas(vm) {
+            vm.setNombreFilter("uria")
+            advanceUntilIdle()
+            assertEquals(1, vm.empresas.value.size)
+            assertEquals("2", vm.empresas.value.single().id)
+        }
+    }
+
+    @Test
+    fun filtros_filtraPorNombreDeActividad() = runTest(mainDispatcherRule.dispatcher) {
+        val act = Actividad(nombre = "Rafting Sella", imagenUrl = "", categoria = "agua")
+        val fake = FakeEmpresaRepository(
+            listOf(
+                empresa("1", "Sin marca", "Llanes", 43.39, -4.75, actividades = listOf(act)),
+                empresa("2", "Otra", "Llanes", 43.39, -4.75, actividades = emptyList()),
+            ),
+        )
+        val vm = ListViewModel(fake, performInitialSync = false)
+
+        collectEmpresas(vm) {
+            vm.setNombreFilter("sella")
+            advanceUntilIdle()
+            assertEquals(1, vm.empresas.value.size)
+            assertEquals("1", vm.empresas.value.single().id)
+        }
+    }
+
+    @Test
+    fun filtros_filtraPorCategoriaDeActividad() = runTest(mainDispatcherRule.dispatcher) {
+        val act = Actividad(nombre = "Circuito Norte", imagenUrl = "", categoria = "ciclismo")
+        val fake = FakeEmpresaRepository(
+            listOf(
+                empresa("1", "A", "Oviedo", 43.36, -5.85, actividades = listOf(act)),
+                empresa("2", "B", "Gijón", 43.532, -5.661, actividades = emptyList()),
+            ),
+        )
+        val vm = ListViewModel(fake, performInitialSync = false)
+
+        collectEmpresas(vm) {
+            vm.setNombreFilter("cicli")
+            advanceUntilIdle()
+            assertEquals(1, vm.empresas.value.size)
+            assertEquals("1", vm.empresas.value.single().id)
+        }
+    }
 
     @Test
     fun filtros_filtraPorNombre() = runTest(mainDispatcherRule.dispatcher) {
@@ -142,7 +203,24 @@ class ListViewModelTest {
     fun filtros_MockitoObserveEmpresa_flujo_se_conecta() = runTest(mainDispatcherRule.dispatcher) {
         val repo: EmpresaRepository = mock()
         val samples = listOf(empresa("1", "A", "Gijón", 43.532, -5.661))
-        whenever(repo.observeEmpresas()).thenReturn(flowOf(samples))
+        whenever(repo.observeFilteredEmpresas(any(), any())).thenAnswer { inv ->
+            val g = inv.getArgument<String>(0).trim()
+            val l = inv.getArgument<String>(1).trim()
+            val filtered = samples.filter { e ->
+                val gOk = g.isEmpty() ||
+                    e.nombre.contains(g, ignoreCase = true) ||
+                    e.contacto.direccion?.contains(g, ignoreCase = true) == true ||
+                    e.informacion.actividades.any { act ->
+                        act.nombre.contains(g, ignoreCase = true) ||
+                            act.categoria.contains(g, ignoreCase = true)
+                    }
+                val lOk =
+                    l.isEmpty() ||
+                        e.contacto.localidad.contains(l, ignoreCase = true)
+                gOk && lOk
+            }
+            flowOf(filtered)
+        }
 
         val vm = ListViewModel(repo, performInitialSync = false)
 
@@ -150,7 +228,7 @@ class ListViewModelTest {
             vm.setNombreFilter("ZZZ")
             advanceUntilIdle()
             assertEquals(0, vm.empresas.value.size)
-            verify(repo).observeEmpresas()
+            verify(repo, atLeastOnce()).observeFilteredEmpresas(any(), any())
         }
     }
 

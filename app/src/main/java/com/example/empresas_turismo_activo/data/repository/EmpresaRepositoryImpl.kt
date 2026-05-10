@@ -35,13 +35,10 @@ class EmpresaRepositoryImpl(
     override suspend fun getEmpresaById(id: String): Empresa? =
         empresaDao.getEmpresaById(id)?.toDomain()
 
-    /**
-     * Búsqueda reactiva; el texto se recorta en el repositorio para que el SQL reciba cadenas normalizadas
-     * y vacías activen el camino de “devolver todo” descrito en el DAO.
-     */
-    override fun searchEmpresas(query: String): Flow<List<Empresa>> {
-        val normalized = query.trim()
-        return empresaDao.searchEmpresas(normalized).map { rows -> rows.map { it.toDomain() } }
+    override fun observeFilteredEmpresas(globalQuery: String, localidadQuery: String): Flow<List<Empresa>> {
+        val g = globalQuery.trim()
+        val loc = localidadQuery.trim()
+        return empresaDao.observeFilteredEmpresas(g, loc).map { rows -> rows.map { it.toDomain() } }
     }
 
     /**

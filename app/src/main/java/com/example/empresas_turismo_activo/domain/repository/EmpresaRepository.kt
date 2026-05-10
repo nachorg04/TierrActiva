@@ -19,10 +19,10 @@ interface EmpresaRepository {
     suspend fun getEmpresaById(id: String): Empresa?
 
     /**
-     * Busca empresas cuyos campos locales expuestos incluyan el texto proporcionado. La cadena vacía o
-     * solo espacios devuelve todas las filas ordenadas igual que el resto del catálogo.
+     * Listado observable filtrado en Room por búsqueda global (nombre, dirección, actividades serializadas)
+     * y por localidad. Las cadenas en blanco desactivan cada criterio.
      */
-    fun searchEmpresas(query: String): Flow<List<Empresa>>
+    fun observeFilteredEmpresas(globalQuery: String, localidadQuery: String): Flow<List<Empresa>>
 
     /** Descarga el catálogo remoto y sustituye datos locales; fallos de red se absorben en la implementación. */
     suspend fun syncEmpresas()

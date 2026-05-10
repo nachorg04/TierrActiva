@@ -6,7 +6,7 @@
     <string name="screen_list">Empresas</string>
     <string name="screen_map">Mapa</string>
     <string name="screen_detail">Detalle</string>
-    <string name="filter_by_name">Nombre</string>
+    <string name="filter_by_name">Buscar (Nombre, Actividad, Dirección...)</string>
     <string name="filter_by_localidad">Localidad</string>
     <string name="list_sort_alphabet">Orden A–Z</string>
     <string name="list_sort_proximity">Orden por proximidad</string>
