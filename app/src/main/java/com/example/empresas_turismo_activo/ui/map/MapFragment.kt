@@ -93,7 +93,13 @@ class MapFragment : Fragment() {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(only, SINGLE_MARKER_ZOOM))
         } else {
             val bounds = boundsBuilder.build()
-            map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, paddingPx))
+            try {
+                map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, paddingPx))
+            } catch (_: Exception) {
+                map.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(bounds.center, SINGLE_MARKER_ZOOM),
+                )
+            }
         }
     }
 

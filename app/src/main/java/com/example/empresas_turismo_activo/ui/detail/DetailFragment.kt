@@ -125,6 +125,7 @@ class DetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.imagePortada.dispose()
         binding.recyclerActividades.adapter = null
         _binding = null
     }

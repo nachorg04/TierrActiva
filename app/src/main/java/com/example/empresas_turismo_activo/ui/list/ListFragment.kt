@@ -25,7 +25,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.example.empresas_turismo_activo.data.preferences.ListPersistedState
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Listado principal con filtros declarativos, orden por proximidad y gestión adaptable del LayoutManager para tablet frente a móvil.
@@ -61,11 +60,13 @@ class ListFragment : Fragment() {
         if (grants.any { (_, ok) -> ok }) {
             fetchLastLocationThenSortByProximity()
         } else {
-            Snackbar.make(
-                binding.root,
-                getString(R.string.location_permission_denied),
-                Snackbar.LENGTH_LONG,
-            ).show()
+            if (isAdded && _binding != null) {
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.location_permission_denied),
+                    Snackbar.LENGTH_LONG,
+                ).show()
+            }
         }
     }
 
@@ -92,7 +93,8 @@ class ListFragment : Fragment() {
         if (savedInstanceState != null) {
             applyListControlsFromSnapshot(viewModel.readPersistableUiState())
         } else {
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
+                if (_binding == null) return@launch
                 val persisted = listPreferences.load()
                 viewModel.restorePersisted(persisted)
                 applyListControlsFromSnapshot(persisted)
@@ -223,6 +225,7 @@ class ListFragment : Fragment() {
                 }
             }
         } catch (_: SecurityException) {
+            if (!isAdded || _binding == null) return
             Snackbar.make(
                 binding.root,
                 getString(R.string.location_permission_denied),
@@ -232,6 +235,7 @@ class ListFragment : Fragment() {
     }
 
     private fun showLocationUnavailableSnack() {
+        if (!isAdded || _binding == null) return
         Snackbar.make(
             binding.root,
             getString(R.string.location_unavailable),
@@ -251,7 +255,7 @@ class ListFragment : Fragment() {
     override fun onStop() {
         val nombre = binding.inputFilterNombre.text?.toString().orEmpty()
         val loc = binding.inputFilterLocalidad.text?.toString().orEmpty()
-        runBlocking {
+        requireActivity().lifecycleScope.launch {
             listPreferences.save(viewModel.buildPersistSnapshot(nombre, loc))
         }
         super.onStop()
