@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arquitectura — Empresas Turismo Activo</title>
+  <style>
+    body { font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 11pt; line-height: 1.35; color: #222; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 18pt; border-bottom: 1px solid #333; padding-bottom: 6px; }
+    h2 { font-size: 13pt; margin-top: 20px; }
+    p { margin: 8px 0; text-align: justify; }
+    ul { margin: 6px 0 6px 20px; }
+    li { margin: 4px 0; }
+    .note { font-size: 10pt; color: #444; margin-top: 24px; padding: 10px; background: #f5f5f5; border-left: 4px solid #1565c0; }
+    figure { margin: 16px 0; text-align: center; }
+    figcaption { font-size: 10pt; margin-top: 8px; color: #555; }
+    @media print { body { max-width: none; } .note { break-inside: avoid; } figure { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+
+<h1>Arquitectura de la aplicación «Empresas Turismo Activo»</h1>
+
+<p><strong>Autoría / asignatura:</strong> (completar)</p>
+<p><strong>Fecha:</strong> (completar)</p>
+
+<h2>1. Visión general</h2>
+<p>
+  La aplicación sigue el patrón <strong>MVVM</strong> (Model–View–ViewModel) recomendado por Android:
+  las pantallas (<strong>View</strong>) son <code>Fragment</code> y <code>Activity</code> con layouts y enlaces de datos;
+  la lógica de presentación y el estado observable residen en <strong>ViewModel</strong>;
+  el acceso a datos y reglas de persistencia/sincronización se concentran en un <strong>repositorio</strong>
+  que implementa un contrato del dominio. Así se desacopla la interfaz de los detalles de Room, Retrofit y preferencias.
+</p>
+
+<h2>2. Capas y paquetes</h2>
+<ul>
+  <li><strong>Presentación (<code>ui</code>):</strong> <code>MainActivity</code>, fragmentos de lista, detalle y mapa,
+    adaptadores de <code>RecyclerView</code>, factorías de ViewModel y tema Compose auxiliar.</li>
+  <li><strong>Dominio (<code>domain</code>):</strong> modelos de negocio (<code>Empresa</code>, contacto, coordenadas, etc.)
+    e interfaz <code>EmpresaRepository</code> que define lo que la UI necesita del catálogo.</li>
+  <li><strong>Datos (<code>data</code>):</strong> implementación del repositorio, API Retrofit, DTOs y mapeo a dominio,
+    Room (<code>AppDatabase</code>, <code>EmpresaDao</code>, <code>EmpresaEntity</code>, convertidores) y preferencias (DataStore / locales).</li>
+  <li><strong>Arranque (<code>TurismoApplication</code>):</strong> composición ligera del grafo de dependencias (base de datos, API, repositorio)
+    hasta disponer de un contenedor DI dedicado.</li>
+  <li><strong>Utilidades (<code>util</code>):</strong> p. ej. cálculo de distancias para ordenación por proximidad.</li>
+</ul>
+
+<h2>3. Flujo de datos típico</h2>
+<p>
+  Al iniciar el listado, el <code>ListViewModel</code> puede disparar una sincronización remota; el repositorio descarga el JSON,
+  lo convierte a entidades Room y las inserta. La UI observa <code>Flow</code>/<code>StateFlow</code> expuestos por el repositorio o el ViewModel,
+  de modo que los cambios en la base de datos se reflejan automáticamente en la lista. El detalle resuelve una empresa por id (argumentos de navegación);
+  el mapa consume el mismo catálogo observable y delega la interacción con Google Maps en el fragmento correspondiente.
+</p>
+
+<h2>4. Esquema de relación entre clases principales</h2>
+<p>
+  El diagrama siguiente resume dependencias de alto nivel (no incluye todos los DTO ni modelos secundarios).
+  Puede ampliarse en Word tras convertir el documento a <strong>.docx</strong>.
+</p>
+
+<figure>
+  <!-- Esquema vectorial: compatible con muchos navegadores y con Word al importar HTML -->
+  <svg xmlns="http://www.w3.org/2000/svg" width="720" height="520" viewBox="0 0 720 520" role="img" aria-labelledby="svgTitle">
+    <title id="svgTitle">Relación entre capas MVVM y clases principales</title>
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+        <polygon points="0 0, 10 4, 0 8" fill="#333" />
+      </marker>
+      <style><![CDATA[
+        .box { fill: #fff; stroke: #333; stroke-width: 1.5; rx: 6; }
+        .layer { font: bold 11px sans-serif; fill: #1565c0; }
+        .cls { font: 11px sans-serif; fill: #111; }
+        .line { stroke: #333; stroke-width: 1.2; fill: none; marker-end: url(#arrow); }
+        .dash { stroke: #666; stroke-width: 1; stroke-dasharray: 4 3; fill: none; marker-end: url(#arrow); }
+      ]]></style>
+    </defs>
+
+    <text x="360" y="22" text-anchor="middle" class="layer">COMPOSICIÓN Y DATOS</text>
+    <rect class="box" x="200" y="32" width="320" height="36" />
+    <text x="360" y="55" text-anchor="middle" class="cls">TurismoApplication → EmpresaRepositoryImpl(EmpresaDao, EmpresaApiService)</text>
+
+    <text x="360" y="100" text-anchor="middle" class="layer">DOMINIO (contrato)</text>
+    <rect class="box" x="260" y="108" width="200" height="32" />
+    <text x="360" y="129" text-anchor="middle" class="cls">«interface» EmpresaRepository</text>
+
+    <text x="360" y="168" text-anchor="middle" class="layer">PERSISTENCIA / RED</text>
+    <rect class="box" x="80" y="178" width="200" height="36" />
+    <text x="180" y="201" text-anchor="middle" class="cls">AppDatabase → EmpresaDao (Room)</text>
+    <rect class="box" x="440" y="178" width="200" height="36" />
+    <text x="540" y="201" text-anchor="middle" class="cls">EmpresaApiService (Retrofit)</text>
+    <path class="line" d="M 360 140 L 360 160" />
+    <path class="line" d="M 320 160 L 180 178" />
+    <path class="line" d="M 400 160 L 540 178" />
+
+    <text x="360" y="248" text-anchor="middle" class="layer">VIEWMODEL</text>
+    <rect class="box" x="40" y="258" width="200" height="30" />
+    <text x="140" y="278" text-anchor="middle" class="cls">ListViewModel</text>
+    <rect class="box" x="260" y="258" width="200" height="30" />
+    <text x="360" y="278" text-anchor="middle" class="cls">DetailViewModel</text>
+    <rect class="box" x="480" y="258" width="200" height="30" />
+    <text x="580" y="278" text-anchor="middle" class="cls">MapViewModel</text>
+    <path class="dash" d="M 140 258 L 320 150" />
+    <path class="dash" d="M 360 258 L 360 140" />
+    <path class="dash" d="M 580 258 L 400 150" />
+
+    <text x="360" y="318" text-anchor="middle" class="layer">VISTA (VIEW)</text>
+    <rect class="box" x="40" y="328" width="200" height="30" />
+    <text x="140" y="348" text-anchor="middle" class="cls">ListFragment</text>
+    <rect class="box" x="260" y="328" width="200" height="30" />
+    <text x="360" y="348" text-anchor="middle" class="cls">DetailFragment</text>
+    <rect class="box" x="480" y="328" width="200" height="30" />
+    <text x="580" y="348" text-anchor="middle" class="cls">MapFragment</text>
+    <path class="line" d="M 140 328 L 140 288" />
+    <path class="line" d="M 360 328 L 360 288" />
+    <path class="line" d="M 580 328 L 580 288" />
+
+    <text x="360" y="392" text-anchor="middle" class="layer">ACTIVITY Y NAVEGACIÓN</text>
+    <rect class="box" x="230" y="402" width="260" height="34" />
+    <text x="360" y="424" text-anchor="middle" class="cls">MainActivity + NavHost (Navigation Component)</text>
+    <path class="line" d="M 360 402 L 360 358" />
+
+    <text x="360" y="468" text-anchor="middle" class="cls" style="font-size:10px; fill:#444;">
+      Adaptadores: EmpresaListAdapter, ActividadListAdapter · Modelos dominio: Empresa, Contacto, … · Mappers DTO/Entity
+    </text>
+  </svg>
+  <figcaption>Figura 1. Dependencias principales entre capas (flechas continuas: uso directo; discontinuas: dependencia vía interfaz).</figcaption>
+</figure>
+
+<h2>5. Cierre</h2>
+<p>
+  Esta estructura facilita pruebas (repositorio mockeable en unit tests), mantenimiento por responsabilidad única
+  y evolución futura (p. ej. inyección de dependencias con Hilt o Koin) sin reescribir la lógica de pantalla.
+</p>
+
+<div class="note">
+  <strong>Cómo obtener un documento Word (.docx):</strong> en Microsoft Word, use <em>Archivo → Abrir</em> y seleccione este archivo HTML.
+  Luego <em>Archivo → Guardar como</em> y elija formato <strong>Documento de Word (.docx)</strong>. Revise tipografías y márgenes según la norma de su centro.
+  Si el diagrama SVG no se conserva bien, copie la figura desde un navegador (vista previa del HTML) y péguela en Word como imagen, o inserte una captura del SVG.
+</div>
+
+</body>
+</html>

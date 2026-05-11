@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arquitectura — Empresas Turismo Activo</title>
+  <style>
+    body { font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 11pt; line-height: 1.35; color: #222; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 18pt; border-bottom: 1px solid #333; padding-bottom: 6px; }
+    h2 { font-size: 13pt; margin-top: 20px; }
+    p { margin: 8px 0; text-align: justify; }
+    ul { margin: 6px 0 6px 20px; }
+    li { margin: 4px 0; }
+    .note { font-size: 10pt; color: #444; margin-top: 24px; padding: 10px; background: #f5f5f5; border-left: 4px solid #1565c0; }
+    figure { margin: 16px 0; text-align: center; }
+    figcaption { font-size: 10pt; margin-top: 8px; color: #555; }
+    @media print { body { max-width: none; } .note { break-inside: avoid; } figure { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+
+<h1>Arquitectura de la aplicación «Empresas Turismo Activo»</h1>
+
+<p><strong>Autoría / asignatura:</strong> (completar)</p>
+<p><strong>Fecha:</strong> (completar)</p>
+
+<h2>1. Visión general</h2>
+<p>
+  La aplicación sigue el patrón <strong>MVVM</strong> (Model–View–ViewModel) recomendado por Android:
+  las pantallas (<strong>View</strong>) son <code>Fragment</code> y <code>Activity</code> con layouts y enlaces de datos;
+  la lógica de presentación y el estado observable residen en <strong>ViewModel</strong>;
+  el acceso a datos y reglas de persistencia/sincronización se concentran en un <strong>repositorio</strong>
+  que implementa un contrato del dominio. Así se desacopla la interfaz de los detalles de Room, Retrofit y preferencias.
+</p>
+
+<h2>2. Capas y paquetes</h2>
+<ul>
+  <li><strong>Presentación (<code>ui</code>):</strong> <code>MainActivity</code>, fragmentos de lista, detalle y mapa,
+    adaptadores de <code>RecyclerView</code>, factorías de ViewModel y tema Compose auxiliar.</li>
+  <li><strong>Dominio (<code>domain</code>):</strong> modelos de negocio (<code>Empresa</code>, contacto, coordenadas, etc.)
+    e interfaz <code>EmpresaRepository</code> que define lo que la UI necesita del catálogo.</li>
+  <li><strong>Datos (<code>data</code>):</strong> implementación del repositorio, API Retrofit, DTOs y mapeo a dominio,
+    Room (<code>AppDatabase</code>, <code>EmpresaDao</code>, <code>EmpresaEntity</code>, convertidores) y preferencias (DataStore / locales).</li>
+  <li><strong>Arranque (<code>TurismoApplication</code>):</strong> composición ligera del grafo de dependencias (base de datos, API, repositorio)
+    hasta disponer de un contenedor DI dedicado.</li>
+  <li><strong>Utilidades (<code>util</code>):</strong> p. ej. cálculo de distancias para ordenación por proximidad.</li>
+</ul>
+
+<h2>3. Flujo de datos típico</h2>
+<p>
+  Al iniciar el listado, el <code>ListViewModel</code> puede disparar una sincronización remota; el repositorio descarga el JSON,
+  lo convierte a entidades Room y las inserta. La UI observa <code>Flow</code>/<code>StateFlow</code> expuestos por el repositorio o el ViewModel,
+  de modo que los cambios en la base de datos se reflejan automáticamente en la lista. El detalle resuelve una empresa por id (argumentos de navegación);
+  el mapa consume el mismo catálogo observable y delega la interacción con Google Maps en el fragmento correspondiente.
+</p>
+
+<h2>4. Esquema de relación entre clases principales</h2>
+<p>
+  El diagrama siguiente es una <strong>imagen PNG</strong> (no SVG): Microsoft Word al abrir HTML suele mostrar el código del SVG como texto en lugar del dibujo.
+  Con PNG el esquema se incrusta como figura normal al guardar en <strong>.docx</strong>.
+</p>
+
+<figure>
+  <img
+    src="arquitectura_diagrama.png"
+    width="760"
+    height="560"
+    alt="Diagrama en capas: TurismoApplication y EmpresaRepositoryImpl; interfaz EmpresaRepository; Room y Retrofit; ViewModels; Fragments; MainActivity y NavHost."
+    style="max-width: 100%; height: auto; border: 1px solid #ccc;"
+  />
+  <figcaption>Figura 1. Dependencias principales entre capas (flechas continuas: uso directo; discontinuas: dependencia vía interfaz).</figcaption>
+</figure>
+
+<h2>5. Cierre</h2>
+<p>
+  Esta estructura facilita pruebas (repositorio mockeable en unit tests), mantenimiento por responsabilidad única
+  y evolución futura (p. ej. inyección de dependencias con Hilt o Koin) sin reescribir la lógica de pantalla.
+</p>
+
+<div class="note">
+  <strong>Cómo pasarlo a Word:</strong> mantenga este HTML y el archivo <code>arquitectura_diagrama.png</code> en la misma carpeta (<code>docs/</code>).
+  En Word: <em>Archivo → Abrir</em> este HTML; debería verse el dibujo. Luego <em>Archivo → Guardar como → Documento de Word (.docx)</em>.
+  Si la imagen no aparece, use <em>Insertar → Imágenes</em> y elija <code>arquitectura_diagrama.png</code> manualmente.
+  Para volver a generar el dibujo: en PowerShell, <code>.\docs\generate_arquitectura_diagram.ps1</code>.
+  <br /><br />
+  (Copia actualizada: si tenía abierto <code>Arquitectura_MVVM_Empresas_Turismo_Activo.html</code>, puede cerrarlo y renombrar este archivo o copiar el contenido.)
+</div>
+
+</body>
+</html>
