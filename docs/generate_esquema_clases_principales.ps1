@@ -83,7 +83,7 @@ function Draw-Label {
 
 # Title
 $g.DrawString("Esquema de relaciones entre clases principales", $fontTitle, $brushTitle, 360, 20)
-$g.DrawString("Proyecto: Empresas Turismo Activo (MVVM)", (New-Object System.Drawing.Font("Segoe UI", 12)), $brushTitle, 520, 62)
+$g.DrawString("Proyecto: TierrActiva (MVVM)", (New-Object System.Drawing.Font("Segoe UI", 12)), $brushTitle, 520, 62)
 
 # Layer guides
 $g.DrawLine($penSoft, 80, 150, 1520, 150)

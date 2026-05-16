@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Turismo Activo Asturias</string>
+    <string name="app_name">TierrActiva</string>
     <string name="nav_list">Lista</string>
     <string name="nav_map">Mapa</string>
     <string name="screen_list">Empresas</string>
