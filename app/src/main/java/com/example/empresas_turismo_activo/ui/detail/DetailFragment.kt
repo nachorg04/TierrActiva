@@ -17,7 +17,7 @@ import coil.load
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentDetailBinding
-import com.example.empresas_turismo_activo.domain.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Empresa
 import kotlinx.coroutines.launch
 
 /** Destino profundo que recibe [empresaId] gracias a Safe Args desde el catálogo o el mapa. */

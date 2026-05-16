@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.databinding.ItemEmpresaBinding
-import com.example.empresas_turismo_activo.domain.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Empresa
 
 /**
  * Lista reciclada con DiffUtil que compara identidad de negocio y contenido completo.

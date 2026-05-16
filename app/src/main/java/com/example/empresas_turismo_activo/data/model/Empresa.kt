@@ -1,8 +1,8 @@
-package com.example.empresas_turismo_activo.domain.model
+package com.example.empresas_turismo_activo.data.model
 
 /**
  * Representa una empresa de turismo activo en Asturias con todos sus datos anidados expuestos
- * desde la capa de dominio como una única pieza coherente.
+ * a la UI como una única pieza coherente (capa de datos / modelo de aplicación).
  *
  * @property id Identificador estable en la fuente de datos original.
  * @property nombre Razón social o nombre comercial de la empresa.

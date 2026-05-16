@@ -1,11 +1,11 @@
-package com.example.empresas_turismo_activo.domain.repository
+package com.example.empresas_turismo_activo.data.repository
 
-import com.example.empresas_turismo_activo.domain.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Empresa
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato base para acceder al catálogo de empresas; la fuente de verdad vive tras este límite
- * aplicando políticas sobre la persistencia local (Room).
+ * Contrato de la capa de datos para acceder al catálogo de empresas; la implementación combina
+ * persistencia local (Room) y sincronización remota (Retrofit).
  */
 interface EmpresaRepository {
 

@@ -29,18 +29,18 @@
   La aplicación sigue el patrón <strong>MVVM</strong> (Model–View–ViewModel) recomendado por Android:
   las pantallas (<strong>View</strong>) son <code>Fragment</code> y <code>Activity</code> con layouts y enlaces de datos;
   la lógica de presentación y el estado observable residen en <strong>ViewModel</strong>;
-  el acceso a datos y reglas de persistencia/sincronización se concentran en un <strong>repositorio</strong>
-  que implementa un contrato del dominio. Así se desacopla la interfaz de los detalles de Room, Retrofit y preferencias.
+  el acceso a datos, la lógica de negocio y la sincronización se concentran en la <strong>capa de datos</strong>
+  (<code>data</code>: repositorio, Room, Retrofit). La UI observa el estado vía ViewModels, sin capa de dominio separada
+  (según el temario: UI Layer + Data Layer).
 </p>
 
 <h2>2. Capas y paquetes</h2>
 <ul>
-  <li><strong>Presentación (<code>ui</code>):</strong> <code>MainActivity</code>, fragmentos de lista, detalle y mapa,
+  <li><strong>Capa UI (<code>ui</code>):</strong> <code>MainActivity</code>, fragmentos de lista, detalle y mapa,
     adaptadores de <code>RecyclerView</code>, factorías de ViewModel y tema Compose auxiliar.</li>
-  <li><strong>Dominio (<code>domain</code>):</strong> modelos de negocio (<code>Empresa</code>, contacto, coordenadas, etc.)
-    e interfaz <code>EmpresaRepository</code> que define lo que la UI necesita del catálogo.</li>
-  <li><strong>Datos (<code>data</code>):</strong> implementación del repositorio, API Retrofit, DTOs y mapeo a dominio,
-    Room (<code>AppDatabase</code>, <code>EmpresaDao</code>, <code>EmpresaEntity</code>, convertidores) y preferencias (DataStore / locales).</li>
+  <li><strong>Capa de datos (<code>data</code>):</strong> modelos (<code>Empresa</code>, etc.), contrato e implementación de
+    <code>EmpresaRepository</code>, API Retrofit, DTOs y mapeos, Room
+    (<code>AppDatabase</code>, <code>EmpresaDao</code>, <code>EmpresaEntity</code>, convertidores) y preferencias.</li>
   <li><strong>Arranque (<code>TurismoApplication</code>):</strong> composición ligera del grafo de dependencias (base de datos, API, repositorio)
     hasta disponer de un contenedor DI dedicado.</li>
   <li><strong>Utilidades (<code>util</code>):</strong> p. ej. cálculo de distancias para ordenación por proximidad.</li>
@@ -81,9 +81,9 @@
     <rect class="box" x="200" y="32" width="320" height="36" />
     <text x="360" y="55" text-anchor="middle" class="cls">TurismoApplication → EmpresaRepositoryImpl(EmpresaDao, EmpresaApiService)</text>
 
-    <text x="360" y="100" text-anchor="middle" class="layer">DOMINIO (contrato)</text>
-    <rect class="box" x="260" y="108" width="200" height="32" />
-    <text x="360" y="129" text-anchor="middle" class="cls">«interface» EmpresaRepository</text>
+    <text x="360" y="100" text-anchor="middle" class="layer">CAPA DE DATOS (contrato + fuentes)</text>
+    <rect class="box" x="220" y="108" width="280" height="32" />
+    <text x="360" y="129" text-anchor="middle" class="cls">«interface» EmpresaRepository + EmpresaRepositoryImpl</text>
 
     <text x="360" y="168" text-anchor="middle" class="layer">PERSISTENCIA / RED</text>
     <rect class="box" x="80" y="178" width="200" height="36" />

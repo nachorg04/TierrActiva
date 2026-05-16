@@ -5,8 +5,8 @@ import com.example.empresas_turismo_activo.data.local.mapper.toDomain
 import com.example.empresas_turismo_activo.data.local.mapper.toEntity
 import com.example.empresas_turismo_activo.data.remote.EmpresaApiService
 import com.example.empresas_turismo_activo.data.remote.mapper.toDomain
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -1,4 +1,4 @@
-package com.example.empresas_turismo_activo.domain.model
+package com.example.empresas_turismo_activo.data.model
 
 /**
  * Contenido descriptivo y actividades agrupadas bajo información de empresa.

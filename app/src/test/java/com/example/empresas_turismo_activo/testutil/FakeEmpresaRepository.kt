@@ -1,7 +1,7 @@
 package com.example.empresas_turismo_activo.testutil
 
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

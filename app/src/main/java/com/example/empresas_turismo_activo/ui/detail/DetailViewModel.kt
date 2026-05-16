@@ -2,8 +2,8 @@ package com.example.empresas_turismo_activo.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

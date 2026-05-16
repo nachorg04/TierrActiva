@@ -3,12 +3,12 @@ package com.example.empresas_turismo_activo.ui.list
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.example.empresas_turismo_activo.CoroutineMainRule
-import com.example.empresas_turismo_activo.domain.model.Contacto
-import com.example.empresas_turismo_activo.domain.model.Actividad
-import com.example.empresas_turismo_activo.domain.model.Coordenadas
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.model.Informacion
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.model.Contacto
+import com.example.empresas_turismo_activo.data.model.Actividad
+import com.example.empresas_turismo_activo.data.model.Coordenadas
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Informacion
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import com.example.empresas_turismo_activo.testutil.FakeEmpresaRepository
 import com.example.empresas_turismo_activo.util.GeoDistance
 import kotlinx.coroutines.flow.flowOf

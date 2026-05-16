@@ -63,7 +63,13 @@ class ListFragment : Fragment() {
         object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 offsetFiltersHeaderWithListScroll(recyclerView, dy)
+                syncRecyclerOverlayPadding()
             }
+        }
+
+    private val filtersHeaderLayoutChangeListener =
+        View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            syncRecyclerOverlayPadding()
         }
 
     private val viewModel: ListViewModel by viewModels {
@@ -120,6 +126,8 @@ class ListFragment : Fragment() {
         binding.recyclerEmpresas.adapter = adapter
         binding.recyclerEmpresas.addOnScrollListener(empresaListRecyclerScrollListener)
         binding.listFiltersHeader.translationY = 0f
+        binding.listFiltersHeader.addOnLayoutChangeListener(filtersHeaderLayoutChangeListener)
+        binding.listFiltersHeader.post { syncRecyclerOverlayPadding() }
 
         if (savedInstanceState != null) {
             applyListControlsFromSnapshot(viewModel.readPersistableUiState())
@@ -196,6 +204,23 @@ class ListFragment : Fragment() {
     private fun resetFiltersHeaderTranslation() {
         if (_binding == null) return
         binding.listFiltersHeader.translationY = 0f
+        syncRecyclerOverlayPadding()
+    }
+
+    /**
+     * En modo overlay (portrait/tablet vertical), reserva espacio superior según la parte visible
+     * del panel de filtros para que la primera tarjeta no quede tapada al estar el listado arriba.
+     */
+    private fun syncRecyclerOverlayPadding() {
+        if (_binding == null || !useFiltersHeaderOverlayBehavior()) return
+        val header = binding.listFiltersHeader
+        val recycler = binding.recyclerEmpresas
+        val gap = resources.getDimensionPixelSize(R.dimen.list_filters_recycler_gap)
+        val headerVisibleBottom = (header.height + header.translationY).coerceAtLeast(0f).toInt()
+        val top = headerVisibleBottom + gap
+        if (recycler.paddingTop != top) {
+            recycler.setPadding(recycler.paddingLeft, top, recycler.paddingRight, recycler.paddingBottom)
+        }
     }
 
     /** Desplaza el panel de filtros en sync con los píxeles verticales que se desplaza el RecyclerView. */
@@ -212,9 +237,11 @@ class ListFragment : Fragment() {
             val maxUp = -hPx.toFloat()
             if (!recyclerView.canScrollVertically(-1)) {
                 header.translationY = 0f
+                syncRecyclerOverlayPadding()
                 return
             }
             header.translationY = (header.translationY - dy.toFloat()).coerceIn(maxUp, 0f)
+            syncRecyclerOverlayPadding()
         }
         val measured = header.height
         if (measured > 0) {
@@ -344,6 +371,7 @@ class ListFragment : Fragment() {
             else -> LinearLayoutManager(requireContext())
         }
         resetFiltersHeaderTranslation()
+        binding.listFiltersHeader.post { syncRecyclerOverlayPadding() }
     }
 
     override fun onStop() {
@@ -359,6 +387,7 @@ class ListFragment : Fragment() {
         super.onDestroyView()
         searchScrollDebouncerJob?.cancel()
         searchScrollDebouncerJob = null
+        binding.listFiltersHeader.removeOnLayoutChangeListener(filtersHeaderLayoutChangeListener)
         binding.recyclerEmpresas.removeOnScrollListener(empresaListRecyclerScrollListener)
         binding.recyclerEmpresas.adapter = null
         _binding = null

@@ -1,8 +1,8 @@
 package com.example.empresas_turismo_activo.data.local.converter
 
 import androidx.room.TypeConverter
-import com.example.empresas_turismo_activo.domain.model.Actividad
-import com.example.empresas_turismo_activo.domain.model.RedSocial
+import com.example.empresas_turismo_activo.data.model.Actividad
+import com.example.empresas_turismo_activo.data.model.RedSocial
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 

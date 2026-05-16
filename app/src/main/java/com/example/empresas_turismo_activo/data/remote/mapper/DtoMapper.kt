@@ -5,12 +5,12 @@ import com.example.empresas_turismo_activo.data.remote.dto.ContactoDto
 import com.example.empresas_turismo_activo.data.remote.dto.CoordenadasDto
 import com.example.empresas_turismo_activo.data.remote.dto.EmpresaDto
 import com.example.empresas_turismo_activo.data.remote.dto.InformacionDto
-import com.example.empresas_turismo_activo.domain.model.Actividad
-import com.example.empresas_turismo_activo.domain.model.Contacto
-import com.example.empresas_turismo_activo.domain.model.Coordenadas
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.model.Informacion
-import com.example.empresas_turismo_activo.domain.model.RedSocial
+import com.example.empresas_turismo_activo.data.model.Actividad
+import com.example.empresas_turismo_activo.data.model.Contacto
+import com.example.empresas_turismo_activo.data.model.Coordenadas
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Informacion
+import com.example.empresas_turismo_activo.data.model.RedSocial
 import java.util.Locale
 
 /** Conversión estable desde capa red hacia modelo de dominio usado también por Room. */

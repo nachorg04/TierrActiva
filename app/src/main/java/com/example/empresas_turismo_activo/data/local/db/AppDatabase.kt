@@ -10,13 +10,13 @@ import com.example.empresas_turismo_activo.data.local.dao.EmpresaDao
 import com.example.empresas_turismo_activo.data.local.entity.EmpresaEntity
 
 /**
- * Base de datos Room principal; versiona de forma explícita y deja exportSchema en false en prototipos para
- * evitar ruido de CI hasta que se formalicen migraciones.
+ * Base de datos Room principal. exportSchema = true genera el archivo JSON de esquema en
+ * app/schemas/ con cada versión, lo que facilita inspección y futuras migraciones.
  */
 @Database(
     entities = [EmpresaEntity::class],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(EmpresaConverters::class)
 abstract class AppDatabase : RoomDatabase() {

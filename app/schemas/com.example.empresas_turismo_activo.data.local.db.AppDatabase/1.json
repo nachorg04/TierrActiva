@@ -1,0 +1,139 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "93566203215faf8d4b16fc4e9f77edf5",
+    "entities": [
+      {
+        "tableName": "empresas_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nombre` TEXT NOT NULL, `concejo` TEXT NOT NULL, `direccion` TEXT, `localidad` TEXT NOT NULL, `telefonos` TEXT NOT NULL, `emails` TEXT NOT NULL, `redes_sociales` TEXT NOT NULL, `web` TEXT, `lat` REAL NOT NULL, `lng` REAL NOT NULL, `imagen_portada` TEXT NOT NULL, `titulo_informacion` TEXT NOT NULL, `descripcion_informacion` TEXT NOT NULL, `zona_actividad` TEXT NOT NULL, `actividades` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "concejo",
+            "columnName": "concejo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "direccion",
+            "columnName": "direccion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "localidad",
+            "columnName": "localidad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "telefonos",
+            "columnName": "telefonos",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emails",
+            "columnName": "emails",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "redesSociales",
+            "columnName": "redes_sociales",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "web",
+            "columnName": "web",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lng",
+            "columnName": "lng",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imagenPortada",
+            "columnName": "imagen_portada",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tituloInformacion",
+            "columnName": "titulo_informacion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcionInformacion",
+            "columnName": "descripcion_informacion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zonaActividad",
+            "columnName": "zona_actividad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actividades",
+            "columnName": "actividades",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_empresas_table_localidad",
+            "unique": false,
+            "columnNames": [
+              "localidad"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_empresas_table_localidad` ON `${TABLE_NAME}` (`localidad`)"
+          },
+          {
+            "name": "index_empresas_table_zona_actividad",
+            "unique": false,
+            "columnNames": [
+              "zona_actividad"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_empresas_table_zona_actividad` ON `${TABLE_NAME}` (`zona_actividad`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '93566203215faf8d4b16fc4e9f77edf5')"
+    ]
+  }
+}

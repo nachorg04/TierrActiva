@@ -44,9 +44,9 @@ Draw-RoundedRect $g 140 36 480 40 8
 Draw-CenteredString $g "TurismoApplication" ($w / 2) 48 $fontBox $brushText
 Draw-CenteredString $g "EmpresaRepositoryImpl (EmpresaDao + EmpresaApiService)" ($w / 2) 64 $fontSmall $brushText
 
-Draw-CenteredString $g "DOMINIO (contrato)" ($w / 2) 92 $fontTitle $brushTitle
-Draw-RoundedRect $g 250 110 260 34 8
-Draw-CenteredString $g "«interface» EmpresaRepository" ($w / 2) 122 $fontBox $brushText
+Draw-CenteredString $g "CAPA DE DATOS (contrato)" ($w / 2) 92 $fontTitle $brushTitle
+Draw-RoundedRect $g 200 110 360 34 8
+Draw-CenteredString $g "EmpresaRepository + EmpresaRepositoryImpl" ($w / 2) 122 $fontBox $brushText
 
 Draw-CenteredString $g "PERSISTENCIA / RED" ($w / 2) 158 $fontTitle $brushTitle
 Draw-RoundedRect $g 40 176 220 38 8
@@ -88,7 +88,7 @@ Draw-CenteredString $g "MainActivity + NavHost (Navigation Component)" ($w / 2) 
 $g.DrawLine($penLine, [int]($w / 2), 388, [int]($w / 2), 350)
 
 Draw-CenteredString $g "Adaptadores: EmpresaListAdapter, ActividadListAdapter" ($w / 2) 440 $fontSmall $brushText
-Draw-CenteredString $g "Mappers DTO/Entity y modelos de dominio (Empresa, Contacto, ...)" ($w / 2) 458 $fontSmall $brushText
+Draw-CenteredString $g "Mappers DTO/Entity y modelos (data.model: Empresa, Contacto, ...)" ($w / 2) 458 $fontSmall $brushText
 
 $dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $out = Join-Path $dir "arquitectura_diagrama.png"

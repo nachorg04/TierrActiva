@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.databinding.ItemActividadBinding
-import com.example.empresas_turismo_activo.domain.model.Actividad
+import com.example.empresas_turismo_activo.data.model.Actividad
 
 /** Lista de actividades con miniatura Coil alineado al JSON remoto (`imagenUrl`). */
 class ActividadListAdapter : ListAdapter<Actividad, ActividadListAdapter.ActividadViewHolder>(DIFF) {

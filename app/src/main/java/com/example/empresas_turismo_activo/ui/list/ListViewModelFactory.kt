@@ -2,7 +2,7 @@ package com.example.empresas_turismo_activo.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 
 /**
  * Factory liviana porque el sistema no puede instanciar [ListViewModel] sin su repositorio inyectado.

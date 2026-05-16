@@ -57,6 +57,11 @@ android {
     }
 }
 
+// Ruta donde Room exporta el JSON de esquema para cada versión de la base de datos.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

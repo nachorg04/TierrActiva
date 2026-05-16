@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import com.example.empresas_turismo_activo.data.local.db.AppDatabase
 import com.example.empresas_turismo_activo.data.remote.EmpresaApiService
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepositoryImpl
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import com.google.gson.Gson
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

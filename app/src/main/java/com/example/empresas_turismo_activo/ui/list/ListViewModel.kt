@@ -3,9 +3,9 @@ package com.example.empresas_turismo_activo.ui.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.empresas_turismo_activo.data.preferences.ListPersistedState
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.model.isLikelyGeocoded
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.model.isLikelyGeocoded
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import com.example.empresas_turismo_activo.util.GeoDistance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

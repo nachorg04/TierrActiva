@@ -2,7 +2,7 @@ package com.example.empresas_turismo_activo.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.empresas_turismo_activo.domain.repository.EmpresaRepository
+import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 
 /**
  * Entrega una instancia parametrizada con el argumento estable de navegación [empresaId].

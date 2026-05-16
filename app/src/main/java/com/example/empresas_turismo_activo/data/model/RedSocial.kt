@@ -1,4 +1,4 @@
-package com.example.empresas_turismo_activo.domain.model
+package com.example.empresas_turismo_activo.data.model
 
 /**
  * Enlace o perfil de red social relacionado con el contacto de la empresa.

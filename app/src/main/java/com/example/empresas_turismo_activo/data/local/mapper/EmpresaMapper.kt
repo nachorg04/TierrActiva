@@ -1,10 +1,10 @@
 package com.example.empresas_turismo_activo.data.local.mapper
 
 import com.example.empresas_turismo_activo.data.local.entity.EmpresaEntity
-import com.example.empresas_turismo_activo.domain.model.Contacto
-import com.example.empresas_turismo_activo.domain.model.Coordenadas
-import com.example.empresas_turismo_activo.domain.model.Empresa
-import com.example.empresas_turismo_activo.domain.model.Informacion
+import com.example.empresas_turismo_activo.data.model.Contacto
+import com.example.empresas_turismo_activo.data.model.Coordenadas
+import com.example.empresas_turismo_activo.data.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Informacion
 
 /** Transformaciones puras entre fila Room y modelo de dominio sin efectos colaterales. */
 

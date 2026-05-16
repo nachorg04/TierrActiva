@@ -1,4 +1,4 @@
-package com.example.empresas_turismo_activo.domain.model
+package com.example.empresas_turismo_activo.data.model
 
 /**
  * Posición geográfica de una empresa de turismo activo.

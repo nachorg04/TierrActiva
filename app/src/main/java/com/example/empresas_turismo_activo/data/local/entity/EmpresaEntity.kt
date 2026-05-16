@@ -4,11 +4,11 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.example.empresas_turismo_activo.domain.model.Actividad
-import com.example.empresas_turismo_activo.domain.model.RedSocial
+import com.example.empresas_turismo_activo.data.model.Actividad
+import com.example.empresas_turismo_activo.data.model.RedSocial
 
 /**
- * Fila única de la tabla física donde se aplana cada [com.example.empresas_turismo_activo.domain.model.Empresa];
+ * Fila única de la tabla física donde se aplana cada [com.example.empresas_turismo_activo.data.model.Empresa];
  * colecciones anidadas se serializan a JSON mediante los convertidores registrados en la base de datos Room.
  */
 @Entity(

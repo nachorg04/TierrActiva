@@ -13,7 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentMapBinding
-import com.example.empresas_turismo_activo.domain.model.Empresa
+import com.example.empresas_turismo_activo.data.model.Empresa
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment

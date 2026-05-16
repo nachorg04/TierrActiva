@@ -6,4 +6,6 @@
     <!-- Barra inferior: algo más compacta; padding V simétrico para centrar iconos -->
     <dimen name="bottom_nav_min_height">60dp</dimen>
     <dimen name="bottom_nav_item_padding_vertical">5dp</dimen>
+    <!-- Separación entre el panel de filtros flotante y la primera tarjeta del listado -->
+    <dimen name="list_filters_recycler_gap">8dp</dimen>
 </resources>
