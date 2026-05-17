@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +52,7 @@ class ListFragment : Fragment() {
 
     /** Evita disparar scroll al recuperar filtros desde DataStore/SavedState durante setText programático. */
     private var searchScrollDebouncerJob: Job? = null
+    private var recyclerTouchLastY = 0f
 
     /** En vertical/portrait el panel flota sobre el listado; en landscape el layout usa dos columnas fijas sin overlay. */
     private fun useFiltersHeaderOverlayBehavior(): Boolean =
@@ -125,6 +127,7 @@ class ListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.recyclerEmpresas.adapter = adapter
         binding.recyclerEmpresas.addOnScrollListener(empresaListRecyclerScrollListener)
+        binding.recyclerEmpresas.setOnTouchListener(::onRecyclerTouchForHeaderOverlay)
         binding.listFiltersHeader.translationY = 0f
         binding.listFiltersHeader.addOnLayoutChangeListener(filtersHeaderLayoutChangeListener)
         binding.listFiltersHeader.post { syncRecyclerOverlayPadding() }
@@ -231,17 +234,43 @@ class ListFragment : Fragment() {
         applyHeaderOffsetWithMeasuredHeight(header, recyclerView, dy)
     }
 
+    /**
+     * Si el listado está en la parte superior, RecyclerView puede dejar de emitir dy útiles.
+     * Capturamos el arrastre táctil para mantener el panel de filtros siempre manipulable.
+     */
+    private fun onRecyclerTouchForHeaderOverlay(view: View, event: MotionEvent): Boolean {
+        if (_binding == null || !useFiltersHeaderOverlayBehavior()) return false
+        val recycler = view as RecyclerView
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                recyclerTouchLastY = event.y
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val deltaFingerY = event.y - recyclerTouchLastY
+                recyclerTouchLastY = event.y
+                if (deltaFingerY == 0f) return false
+
+                val header = binding.listFiltersHeader
+                val shouldDriveHeader =
+                    !recycler.canScrollVertically(-1) || header.translationY != 0f
+                if (shouldDriveHeader) {
+                    applyHeaderOffsetWithMeasuredHeight(
+                        header = header,
+                        recyclerView = recycler,
+                        dy = (-deltaFingerY).toInt(),
+                    )
+                    syncRecyclerOverlayPadding()
+                }
+            }
+        }
+        return false
+    }
+
     private fun applyHeaderOffsetWithMeasuredHeight(header: View, recyclerView: RecyclerView, dy: Int) {
         fun applyMeasured(hPx: Int) {
             if (hPx <= 0) return
             val maxUp = -hPx.toFloat()
-            if (!recyclerView.canScrollVertically(-1)) {
-                header.translationY = 0f
-                syncRecyclerOverlayPadding()
-                return
-            }
             header.translationY = (header.translationY - dy.toFloat()).coerceIn(maxUp, 0f)
-            syncRecyclerOverlayPadding()
         }
         val measured = header.height
         if (measured > 0) {
@@ -388,6 +417,7 @@ class ListFragment : Fragment() {
         searchScrollDebouncerJob?.cancel()
         searchScrollDebouncerJob = null
         binding.listFiltersHeader.removeOnLayoutChangeListener(filtersHeaderLayoutChangeListener)
+        binding.recyclerEmpresas.setOnTouchListener(null)
         binding.recyclerEmpresas.removeOnScrollListener(empresaListRecyclerScrollListener)
         binding.recyclerEmpresas.adapter = null
         _binding = null
