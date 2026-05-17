@@ -226,12 +226,16 @@ class ListFragment : Fragment() {
         }
     }
 
-    /** Desplaza el panel de filtros en sync con los píxeles verticales que se desplaza el RecyclerView. */
+    /** Fracción del gesto que se transmite al panel (menor = despliegue/retracción más lento). */
+    private fun filtersHeaderScrollDamping(): Float =
+        resources.getFloat(R.dimen.list_filters_header_scroll_damping)
+
+    /** Desplaza el panel de filtros en sync con el scroll del listado (con amortiguación). */
     private fun offsetFiltersHeaderWithListScroll(recyclerView: RecyclerView, dy: Int) {
         if (_binding == null || dy == 0) return
         if (!useFiltersHeaderOverlayBehavior()) return
         val header = binding.listFiltersHeader
-        applyHeaderOffsetWithMeasuredHeight(header, recyclerView, dy)
+        applyHeaderOffsetWithMeasuredHeight(header, recyclerView, dy.toFloat())
     }
 
     /**
@@ -257,7 +261,7 @@ class ListFragment : Fragment() {
                     applyHeaderOffsetWithMeasuredHeight(
                         header = header,
                         recyclerView = recycler,
-                        dy = (-deltaFingerY).toInt(),
+                        scrollY = -deltaFingerY,
                     )
                     syncRecyclerOverlayPadding()
                 }
@@ -266,11 +270,17 @@ class ListFragment : Fragment() {
         return false
     }
 
-    private fun applyHeaderOffsetWithMeasuredHeight(header: View, recyclerView: RecyclerView, dy: Int) {
+    private fun applyHeaderOffsetWithMeasuredHeight(
+        header: View,
+        recyclerView: RecyclerView,
+        scrollY: Float,
+    ) {
+        if (scrollY == 0f) return
         fun applyMeasured(hPx: Int) {
             if (hPx <= 0) return
             val maxUp = -hPx.toFloat()
-            header.translationY = (header.translationY - dy.toFloat()).coerceIn(maxUp, 0f)
+            val dampedDelta = scrollY * filtersHeaderScrollDamping()
+            header.translationY = (header.translationY - dampedDelta).coerceIn(maxUp, 0f)
         }
         val measured = header.height
         if (measured > 0) {

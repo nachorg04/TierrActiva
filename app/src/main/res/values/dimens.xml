@@ -8,4 +8,6 @@
     <dimen name="bottom_nav_item_padding_vertical">5dp</dimen>
     <!-- Separación entre el panel de filtros flotante y la primera tarjeta del listado -->
     <dimen name="list_filters_recycler_gap">8dp</dimen>
+    <!-- 0.55 = el panel se mueve al 55% del gesto (más lento que 1:1). Subir = más rápido, bajar = más lento. -->
+    <item name="list_filters_header_scroll_damping" format="float" type="dimen">0.55</item>
 </resources>
