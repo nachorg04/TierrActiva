@@ -5,39 +5,36 @@ import androidx.core.os.LocaleListCompat
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 private val Context.localeUiDataStore by preferencesDataStore(name = "locale_ui")
 
-/** Persistencia del idioma de aplicación (etiqueta interna: system, es, en). */
-class LocalePreferences(context: Context) {
+class LocalePreferences(private val context: Context) {
 
-    private val appContext = context.applicationContext
+    private val TAG_LOCAL = stringPreferencesKey("app_locale_tag")
 
-    suspend fun getLocaleTag(): String =
-        appContext.localeUiDataStore.data
-            .map { prefs -> prefs[KEY_LOCALE_TAG] ?: TAG_SYSTEM }
-            .first()
-
-    suspend fun setLocaleTag(tag: String) {
-        appContext.localeUiDataStore.edit { prefs ->
-            prefs[KEY_LOCALE_TAG] = tag
+    // 1. LEER: Devuelve un Flow<String> continuo (igual que en NightModePreferences)
+    fun getLocaleTag(): Flow<String> {
+        return context.localeUiDataStore.data.map { preferences ->
+            // Si no hay nada guardado, devolvemos un texto vacío ("") que significa "Sistema"
+            preferences[TAG_LOCAL] ?: ""
         }
     }
 
-    fun localeListForTag(tag: String): LocaleListCompat =
-        when (tag) {
-            TAG_ES -> LocaleListCompat.forLanguageTags("es")
-            TAG_EN -> LocaleListCompat.forLanguageTags("en")
-            else -> LocaleListCompat.getEmptyLocaleList()
+    // 2. GUARDAR: Guarda el texto que le pasemos ("es", "en" o "")
+    suspend fun setLocaleTag(tag: String) {
+        context.localeUiDataStore.edit { preferences ->
+            preferences[TAG_LOCAL] = tag
         }
+    }
 
-    companion object {
-        const val TAG_SYSTEM = "system"
-        const val TAG_ES = "es"
-        const val TAG_EN = "en"
-
-        private val KEY_LOCALE_TAG = stringPreferencesKey("app_locale_tag")
+    // 3. TRADUCIR: Convierte nuestro texto simple en el formato complejo que pide Android
+    fun localeListForTag(tag: String): LocaleListCompat {
+        return if (tag.isEmpty() || tag == "system") {
+            LocaleListCompat.getEmptyLocaleList() // Idioma del dispositivo
+        } else {
+            LocaleListCompat.forLanguageTags(tag) // Aplica "es" o "en"
+        }
     }
 }

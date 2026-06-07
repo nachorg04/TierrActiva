@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Host de navegación; defaultNavHost maneja el botón atrás del sistema -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/top_toolbar"
         style="@style/Widget.Empresas_Toolbar"
@@ -14,11 +15,11 @@
         android:minHeight="?attr/actionBarSize"
         android:paddingBottom="10dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:title="@string/app_name" />
 
-    <!-- Host de navegación; defaultNavHost maneja el botón atrás del sistema -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"

@@ -11,6 +11,7 @@ import com.example.empresas_turismo_activo.data.remote.EmpresaApiService
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepositoryImpl
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import com.google.gson.Gson
+import kotlinx.coroutines.flow.first
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -51,10 +52,10 @@ class TurismoApplication : Application() {
 
     override fun onCreate() {
         runBlocking {
-            val tag = localePreferences.getLocaleTag()
+            val tag = localePreferences.getLocaleTag().first()
             AppCompatDelegate.setApplicationLocales(localePreferences.localeListForTag(tag))
-            val dark = nightModePreferences.isDarkTheme()
-            AppCompatDelegate.setDefaultNightMode(nightModePreferences.nightModeConstant(dark))
+            val guardadoModo = nightModePreferences.getModoTema().first()
+            AppCompatDelegate.setDefaultNightMode(guardadoModo)
         }
         super.onCreate()
     }

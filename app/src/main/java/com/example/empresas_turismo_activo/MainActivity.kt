@@ -8,6 +8,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -20,12 +21,10 @@ import com.example.empresas_turismo_activo.data.preferences.LocalePreferences
 import com.example.empresas_turismo_activo.data.preferences.NightModePreferences
 import com.example.empresas_turismo_activo.databinding.ActivityMainBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.math.max
-
-/**
- * Activity única: barra superior (idioma), NavHostFragment y BottomNavigationView.
- */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -38,6 +37,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        runBlocking {
+            // Idioma
+            val tagIdioma = localePreferences.getLocaleTag().first()
+            AppCompatDelegate.setApplicationLocales(localePreferences.localeListForTag(tagIdioma))
+
+            // Tema Oscuro
+            val modoOscuro = nightModePreferences.getModoTema().first()
+            AppCompatDelegate.setDefaultNightMode(modoOscuro)
+        }
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -61,97 +71,96 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
-        setupBottomNavVisibility(navController)
         NavigationUI.setupWithNavController(binding.bottomNavigation, navController)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main_toolbar, menu)
+        menuInflater.inflate(R.menu.menu_superior, menu)
         return true
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        val nightItem = menu.findItem(R.id.action_night_mode)
-        if (nightItem != null) {
-            val isNight =
-                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                    Configuration.UI_MODE_NIGHT_YES
-            val iconRes = if (isNight) R.drawable.ic_sun_24 else R.drawable.ic_moon_24
-            nightItem.icon = AppCompatResources.getDrawable(this, iconRes)
-            nightItem.contentDescription = getString(
-                if (isNight) {
-                    R.string.night_mode_content_desc_light
-                } else {
-                    R.string.night_mode_content_desc_dark
-                },
-            )
-        }
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.action_language -> {
-                showLanguageDialog()
-                return true
-            }
-            R.id.action_night_mode -> {
-                toggleNightMode()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    private fun toggleNightMode() {
+    private fun mostrarDialogoTema() {
         lifecycleScope.launch {
-            val isDark = nightModePreferences.isDarkTheme()
-            val newDark = !isDark
-            nightModePreferences.setDarkTheme(newDark)
-            AppCompatDelegate.setDefaultNightMode(nightModePreferences.nightModeConstant(newDark))
-            recreate()
+            val modoActual = nightModePreferences.getModoTema().first()
+
+            val posicionSeleccionada = when (modoActual) {
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> 0
+                AppCompatDelegate.MODE_NIGHT_NO -> 1
+                AppCompatDelegate.MODE_NIGHT_YES -> 2
+                else -> 0
+            }
+
+        val opciones = arrayOf("Preferencia del Sistema", "Modo Claro", "Modo Oscuro")
+
+        MaterialAlertDialogBuilder(this@MainActivity)
+            .setTitle("Elige el tema")
+            .setSingleChoiceItems(opciones, posicionSeleccionada) { dialog, posicion ->
+                when (posicion) {
+                    0 -> aplicarTema(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    1 -> aplicarTema(AppCompatDelegate.MODE_NIGHT_NO)
+                    2 -> aplicarTema(AppCompatDelegate.MODE_NIGHT_YES)
+                }
+                dialog.dismiss()
+            }
+            .show()
         }
     }
 
-    private fun showLanguageDialog() {
-        val options = arrayOf(
-            getString(R.string.language_system),
-            getString(R.string.language_spanish),
-            getString(R.string.language_english),
-        )
-        val tags = arrayOf(
-            LocalePreferences.TAG_SYSTEM,
-            LocalePreferences.TAG_ES,
-            LocalePreferences.TAG_EN,
-        )
+    private fun mostrarDialogoIdioma() {
         lifecycleScope.launch {
-            val current = localePreferences.getLocaleTag()
-            val checkedItem = tags.indexOf(current).takeIf { it >= 0 } ?: 0
+            val idiomaActual = localePreferences.getLocaleTag().first()
+
+            val posicionSeleccionada = when (idiomaActual) {
+                "es" -> 1
+                "en" -> 2
+                else -> 0
+            }
+
+            val opciones = arrayOf("Preferencia del Sistema", "Español", "English")
+
             MaterialAlertDialogBuilder(this@MainActivity)
-                .setTitle(R.string.language_choose)
-                .setSingleChoiceItems(options, checkedItem) { dialog, which ->
-                    val tag = tags[which]
-                    lifecycleScope.launch {
-                        localePreferences.setLocaleTag(tag)
-                        AppCompatDelegate.setApplicationLocales(
-                            localePreferences.localeListForTag(tag),
-                        )
+                .setTitle("Elige el idioma")
+                .setSingleChoiceItems(opciones, posicionSeleccionada) { dialog, posicion ->
+                    when (posicion) {
+                        0 -> aplicarIdioma("")
+                        1 -> aplicarIdioma("es")
+                        2 -> aplicarIdioma("en")
                     }
                     dialog.dismiss()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
                 .show()
         }
     }
 
-    /** Oculta la barra inferior en detalle para recuperar alto útil de pantalla. */
-    private fun setupBottomNavVisibility(navController: NavController) {
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNavigation.visibility =
-                when (destination.id) {
-                    R.id.detailFragment -> View.GONE
-                    else -> View.VISIBLE
-                }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+
+            R.id.tema_menu -> {
+                mostrarDialogoTema()
+                true
+            }
+
+            R.id.idioma -> {
+                mostrarDialogoIdioma()
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    private fun aplicarTema(modo: Int){
+        lifecycleScope.launch {
+            nightModePreferences.setThemeMode(modo)
+            AppCompatDelegate.setDefaultNightMode(modo)
+        }
+    }
+
+    private fun aplicarIdioma(idioma: String){
+        lifecycleScope.launch {
+            localePreferences.setLocaleTag(idioma)
+            AppCompatDelegate.setApplicationLocales(localePreferences.localeListForTag(idioma))
         }
     }
 }
+
+
