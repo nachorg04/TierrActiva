@@ -31,7 +31,7 @@ class DetailViewModel(
     fun refresh() {
         viewModelScope.launch {
             _uiState.value = DetailUiState.Loading
-            val empresa = repository.getEmpresaById(empresaId)
+            val empresa = repository.getEmpresaId(empresaId)
             _uiState.value =
                 empresa?.let { DetailUiState.Success(it) } ?: DetailUiState.NotFound
         }

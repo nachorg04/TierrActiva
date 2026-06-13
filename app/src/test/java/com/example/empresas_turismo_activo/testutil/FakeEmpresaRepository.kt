@@ -17,17 +17,17 @@ class FakeEmpresaRepository(
         _empresas.value = value
     }
 
-    override fun observeEmpresas(): Flow<List<Empresa>> = _empresas
+    override fun observaEmpresas(): Flow<List<Empresa>> = _empresas
 
-    override suspend fun insertEmpresas(empresas: List<Empresa>) {
+    override suspend fun insertarEmpresas(empresas: List<Empresa>) {
         _empresas.value = empresas
     }
 
-    override suspend fun getEmpresaById(id: String): Empresa? =
+    override suspend fun getEmpresaId(id: String): Empresa? =
         _empresas.value.firstOrNull { it.id == id }
 
-    /** Misma semántica que Room [observeFilteredEmpresas]: nombre/dirección/actividades parseadas + localidad. */
-    override fun observeFilteredEmpresas(globalQuery: String, localidadQuery: String): Flow<List<Empresa>> {
+    /** Misma semántica que Room [observarFiltradasEmpresas]: nombre/dirección/actividades parseadas + localidad. */
+    override fun observarFiltradasEmpresas(globalQuery: String, localidadQuery: String): Flow<List<Empresa>> {
         val g = globalQuery.trim()
         val l = localidadQuery.trim()
         return _empresas.map { catalog ->
@@ -39,7 +39,7 @@ class FakeEmpresaRepository(
         }
     }
 
-    override suspend fun syncEmpresas() {}
+    override suspend fun sincronizaEmpresas() {}
 
     private fun matchesGlobalPredicate(empresa: Empresa, q: String): Boolean {
         if (q.isEmpty()) return true

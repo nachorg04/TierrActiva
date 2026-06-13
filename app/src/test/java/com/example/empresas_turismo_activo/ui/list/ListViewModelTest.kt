@@ -203,8 +203,8 @@ class ListViewModelTest {
     fun filtros_MockitoObserveEmpresa_flujo_se_conecta() = runTest(mainDispatcherRule.dispatcher) {
         val repo: EmpresaRepository = mock()
         val samples = listOf(empresa("1", "A", "Gijón", 43.532, -5.661))
-        whenever(repo.observeEmpresas()).thenReturn(flowOf(samples))
-        whenever(repo.observeFilteredEmpresas(any(), any())).thenAnswer { inv ->
+        whenever(repo.observaEmpresas()).thenReturn(flowOf(samples))
+        whenever(repo.observarFiltradasEmpresas(any(), any())).thenAnswer { inv ->
             val g = inv.getArgument<String>(0).trim()
             val l = inv.getArgument<String>(1).trim()
             val filtered = samples.filter { e ->
@@ -229,7 +229,7 @@ class ListViewModelTest {
             vm.setNombreFilter("ZZZ")
             advanceUntilIdle()
             assertEquals(0, vm.empresas.value.size)
-            verify(repo, atLeastOnce()).observeFilteredEmpresas(any(), any())
+            verify(repo, atLeastOnce()).observarFiltradasEmpresas(any(), any())
         }
     }
 

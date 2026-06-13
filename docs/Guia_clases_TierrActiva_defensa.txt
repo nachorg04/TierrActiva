@@ -1,0 +1,271 @@
+================================================================================
+  TIERRACTIVA - Guía de clases para la defensa (Móviles)
+================================================================================
+
+Cómo explicarlo en 30 segundos
+------------------------------
+"Uso MVVM: los Fragment pintan y reaccionan; los ViewModel guardan estado y lógica;
+el Repository es la única puerta a datos (API + base local). Los modelos describen
+la empresa; los DTO y Entity son formatos para red y Room."
+
+
+ARQUITECTURA EN DOS CAPAS
+-------------------------
+- Capa UI: Fragment + ViewModel + Adapters (pantallas)
+- Capa Data: Repository, Room, Retrofit, modelos, preferencias
+
+No hay carpeta domain separada: modelos y contrato del repositorio están en data/.
+
+
+================================================================================
+1. ARRANQUE Y PANTALLA PRINCIPAL
+================================================================================
+
+TurismoApplication
+  Arranca la app y crea lo compartido: base de datos Room, Retrofit,
+  EmpresaRepository, preferencias (idioma, tema, filtros del listado).
+  Es el "contenedor" de dependencias (sin Hilt/Dagger por ahora).
+
+MainActivity
+  Única Activity: toolbar (idioma, modo noche), NavHost (lista / mapa / detalle)
+  y barra inferior (BottomNavigationView). Oculta el bottom nav en la pantalla
+  de detalle.
+
+
+================================================================================
+2. CAPA UI - LISTA
+================================================================================
+
+ListFragment
+  Pantalla principal: RecyclerView, filtros (nombre, localidad, categoría),
+  orden alfabético / por proximidad, panel de filtros flotante que se oculta
+  al hacer scroll. Observa el ViewModel y navega al detalle.
+
+ListViewModel
+  Lógica del listado: sincroniza datos al inicio, combina filtros y orden con
+  StateFlow, expone "empresas" a la UI. Filtra en SQL (nombre/localidad) y
+  categoría en memoria; calcula distancias si hay ubicación del usuario.
+
+ListaSortMode (enum)
+  Modos de orden: ALPHABETIC (alfabético) o BY_PROXIMITY (por proximidad).
+
+ListViewModelFactory
+  Crea el ListViewModel inyectando el EmpresaRepository (patrón Factory de Android).
+
+EmpresaListAdapter
+  Adaptador del RecyclerView: una fila por empresa, imagen con Coil, clic -> detalle.
+
+
+================================================================================
+3. CAPA UI - DETALLE
+================================================================================
+
+DetailFragment
+  Ficha de una empresa: foto, textos, contacto, redes, lista de actividades.
+  Recibe el id por navegación (Navigation Component).
+
+DetailViewModel
+  Carga la empresa por id desde el repositorio y la expone a la pantalla.
+
+DetailViewModelFactory
+  Construye el DetailViewModel con el repositorio.
+
+ActividadListAdapter
+  Adaptador de la lista de actividades dentro del detalle.
+
+
+================================================================================
+4. CAPA UI - MAPA
+================================================================================
+
+MapFragment
+  Google Maps: marcadores de empresas, cámara, permisos/ubicación si aplica.
+
+MapViewModel
+  Observa el catálogo (mismo repositorio) y prepara datos para los marcadores.
+
+MapViewModelFactory
+  Crea el MapViewModel con el repositorio.
+
+
+================================================================================
+5. CAPA UI - TEMA (Compose - plantilla)
+================================================================================
+
+Color.kt, Type.kt, Theme.kt
+  Plantilla de Jetpack Compose del proyecto. La UI actual usa XML + View Binding;
+  estas clases no se usan en las pantallas principales (restos del template).
+
+
+================================================================================
+6. CAPA DATA - MODELOS (lo que usa la app)
+================================================================================
+
+Empresa
+  Modelo principal: id, nombre, contacto, coordenadas, imagen, información.
+
+Contacto
+  Dirección, teléfono, email, localidad, redes sociales.
+
+Coordenadas
+  Latitud y longitud.
+
+Informacion
+  Descripción y lista de actividades.
+
+Actividad
+  Una actividad concreta (nombre, categoría, etc.).
+
+RedSocial
+  Tipo y URL de una red social.
+
+
+================================================================================
+7. CAPA DATA - REPOSITORIO
+================================================================================
+
+EmpresaRepository (interfaz)
+  Contrato de acceso a datos: observar lista, filtrar, obtener por id,
+  sincronizar. La UI depende de esto, no de Room ni Retrofit directamente.
+
+EmpresaRepositoryImpl
+  Implementación: descarga JSON con Retrofit, guarda en Room; la UI lee siempre
+  de la base local (funciona offline con la última copia si falla la red).
+
+
+================================================================================
+8. CAPA DATA - RED (API)
+================================================================================
+
+EmpresaApiService
+  Interfaz Retrofit: petición GET al catálogo (Gist/API del enunciado).
+
+EmpresaListResponseDto
+  Envoltorio del JSON (lista de empresas).
+
+EmpresaDto, ContactoDto, CoordenadasDto, InformacionDto, ActividadDto
+  Forma del JSON en red (nombres de campos para Gson).
+
+DtoMapper
+  Convierte DTO -> Empresa (modelo de app).
+
+
+================================================================================
+9. CAPA DATA - LOCAL (Room)
+================================================================================
+
+AppDatabase
+  Base de datos Room (singleton).
+
+EmpresaEntity
+  Tabla SQLite: una fila por empresa (campos anidados serializados donde haga falta).
+
+EmpresaDao
+  Consultas SQL: todas las empresas, por id, filtradas por texto/localidad.
+
+EmpresaConverters
+  Convierte tipos complejos (listas, objetos) a JSON en columnas Room.
+
+EmpresaMapper
+  Convierte EmpresaEntity <-> Empresa.
+
+
+================================================================================
+10. CAPA DATA - PREFERENCIAS
+================================================================================
+
+ListPreferences
+  Guarda filtros y preferencias del listado (nombre, localidad, categoría,
+  rejilla en móvil) con DataStore.
+
+ListPersistedState
+  Data class con ese estado guardado.
+
+LocalePreferences
+  Idioma (sistema / español / inglés).
+
+NightModePreferences
+  Tema claro u oscuro.
+
+
+================================================================================
+11. UTILIDADES
+================================================================================
+
+GeoDistance
+  Calcula distancia entre coordenadas (para orden por proximidad).
+
+
+================================================================================
+12. TESTS
+================================================================================
+
+ListViewModelTest
+  Prueba unitaria del ViewModel (filtros, orden) con repositorio falso.
+
+FakeEmpresaRepository
+  Repositorio de mentira para tests.
+
+CoroutineMainRule
+  Configura corrutinas en tests JUnit.
+
+ListFragmentRecyclerTest
+  Test de instrumentación: el listado muestra filas.
+
+MainNavigationInstrumentedTest
+  Navegación entre pantallas.
+
+InstrumentedDbFixtures
+  Datos de prueba en la BD del emulador.
+
+ExampleUnitTest / ExampleInstrumentedTest
+  Plantillas por defecto de Android Studio.
+
+
+================================================================================
+FRASES ÚTILES PARA EL PROFESOR
+================================================================================
+
+1. "¿Por qué Repository?"
+   Una sola fuente de verdad: la UI no sabe si los datos vienen de internet o de SQLite.
+
+2. "¿Por qué Room + Retrofit?"
+   Retrofit trae datos; Room los cachea y permite búsqueda rápida y uso sin red.
+
+3. "¿Por qué ViewModel?"
+   Sobrevive a rotaciones y concentra lógica fuera del Fragment.
+
+4. "¿Por qué StateFlow?"
+   Flujo reactivo: cuando cambian filtros o la BD, la lista se actualiza sola.
+
+5. "¿Capa dominio?"
+   Modelo y contrato del repositorio están en data/ (UI + Data, como en los apuntes).
+
+
+================================================================================
+BÚSQUEDA vs FILTRO (en tu app)
+================================================================================
+
+BÚSQUEDA (más abierta)
+  Campo "por nombre" -> globalQuery en Room: busca texto en nombre, dirección
+  y actividades (LIKE %texto%). No sabes en qué campo va a coincidir.
+
+FILTRO (más estructurado)
+  - "Por localidad": solo el campo localidad de la empresa.
+  - "Categoría": valor de una lista (senderismo, etc.); empresas con alguna
+    actividad de esa categoría.
+
+ORDEN (no es búsqueda ni filtro)
+  Alfabético / proximidad: ordena lo que ya pasó búsqueda + filtros.
+
+
+================================================================================
+ORDEN SUGERIDO AL ENSEÑAR EL DIAGRAMA
+================================================================================
+
+MainActivity
+  -> ListFragment -> ListViewModel -> EmpresaRepository
+  -> EmpresaRepositoryImpl -> EmpresaApiService + EmpresaDao
+  -> modelos Empresa / DTO / Entity
+
+================================================================================

@@ -5,8 +5,8 @@ import com.example.empresas_turismo_activo.data.local.mapper.toDomain
 import com.example.empresas_turismo_activo.data.local.mapper.toEntity
 import com.example.empresas_turismo_activo.data.remote.EmpresaApiService
 import com.example.empresas_turismo_activo.data.remote.mapper.toDomain
+import com.example.empresas_turismo_activo.data.model.Contacto
 import com.example.empresas_turismo_activo.data.model.Empresa
-import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,29 +23,36 @@ class EmpresaRepositoryImpl(
 ) : EmpresaRepository {
 
     /** Propaga cualquier cambio en la tabla mapeándolo inmediatamente a dominio. */
-    override fun observeEmpresas(): Flow<List<Empresa>> =
+    override fun observaEmpresas(): Flow<List<Empresa>> =
         empresaDao.getAllEmpresas().map { rows -> rows.map { it.toDomain() } }
 
+    /** Extraemos la lista de contactos (ciudades) leyendo las empresas. */
+    override fun observaCiudad(): Flow<List<Contacto>> =
+        observaEmpresas().map { empresas -> empresas.map { it.contacto } }
+
     /** Convierte modelos de negocio a entidades antes de invocar el insert masivo en IO. */
-    override suspend fun insertEmpresas(empresas: List<Empresa>) {
+    override suspend fun insertarEmpresas(empresas: List<Empresa>) {
         empresaDao.insertAll(empresas.map { it.toEntity() })
     }
 
     /** Consulta puntual suspendida que devuelve null si el id no está indexado en la BD. */
-    override suspend fun getEmpresaById(id: String): Empresa? =
+    override suspend fun getEmpresaId(id: String): Empresa? =
         empresaDao.getEmpresaById(id)?.toDomain()
 
-    override fun observeFilteredEmpresas(globalQuery: String, localidadQuery: String): Flow<List<Empresa>> {
+    /**
+     * Mantenemos la función original para cumplir la interfaz,
+     * aunque nuestro nuevo ViewModel use filtrado en memoria.
+     */
+    override fun observarFiltradasEmpresas(globalQuery: String, localidadQuery: String): Flow<List<Empresa>> {
         val g = globalQuery.trim()
         val loc = localidadQuery.trim()
         return empresaDao.observeFilteredEmpresas(g, loc).map { rows -> rows.map { it.toDomain() } }
     }
 
     /**
-     * Trae el JSON público, proyecta a dominio y reemplaza tabla local. Errores HTTP o de socket se capturan
-     * para no tumbar el proceso; la UI seguirá mostrando la última foto coherente persistida.
+     * Trae el JSON público, proyecta a dominio y reemplaza tabla local.
      */
-    override suspend fun syncEmpresas() {
+    override suspend fun sincronizaEmpresas() {
         withContext(Dispatchers.IO) {
             try {
                 val body = empresaApi.getEmpresaCatalogo()

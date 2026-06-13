@@ -14,7 +14,7 @@ class MapViewModel(
 ) : ViewModel() {
 
     val empresas: StateFlow<List<Empresa>> = repository
-        .observeEmpresas()
+        .observaEmpresas()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

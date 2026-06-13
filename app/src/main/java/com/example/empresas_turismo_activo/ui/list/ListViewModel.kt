@@ -1,206 +1,176 @@
 package com.example.empresas_turismo_activo.ui.list
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.empresas_turismo_activo.data.preferences.ListPersistedState
 import com.example.empresas_turismo_activo.data.model.Empresa
 import com.example.empresas_turismo_activo.data.model.isLikelyGeocoded
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import com.example.empresas_turismo_activo.util.GeoDistance
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+// Los dos únicos modos de ordenar nuestra lista
 enum class ListaSortMode { ALPHABETIC, BY_PROXIMITY }
 
-/**
- * Lista desde Room: búsqueda y localidad en SQL; categoría seleccionada en capa UI; ordenación aquí.
- */
-@OptIn(ExperimentalCoroutinesApi::class)
 class ListViewModel(
     private val repository: EmpresaRepository,
-    performInitialSync: Boolean = true,
+    performInitialSync: Boolean = true
 ) : ViewModel() {
 
     init {
         if (performInitialSync) {
-            viewModelScope.launch {
-                repository.syncEmpresas()
-            }
+            viewModelScope.launch { repository.sincronizaEmpresas() }
         }
     }
 
-    private val nombreFilter = MutableStateFlow("")
-    private val localidadFilter = MutableStateFlow("")
-    private val categoriaFiltro = MutableStateFlow<String?>(null)
-    private val sortMode = MutableStateFlow(ListaSortMode.ALPHABETIC)
-    /**
-     * Última posición conocida del usuario desde Fused Location; sólo ordena cuando [sortMode]
-     * es [ListaSortMode.BY_PROXIMITY] y aquí hay un par finito lat/lng.
-     */
-    private val userLatLng = MutableStateFlow<Pair<Double, Double>?>(null)
-    private val _preferGridOnMobile = MutableStateFlow(false)
-    val preferGridOnMobile: StateFlow<Boolean> = _preferGridOnMobile.asStateFlow()
+    // =====================================================================
+    // 1. LA MEMORIA (LiveData Clásico para la Interfaz)
+    // =====================================================================
 
-    val categoriaFiltroSeleccionada: StateFlow<String?> = categoriaFiltro.asStateFlow()
+    private val _nombreFilter = MutableLiveData("")
+    private val _categoriasFiltro = MutableLiveData<Set<String>>(emptySet())
+    private val _ciudadesFiltro = MutableLiveData<Set<String>>(emptySet())
+    private val _sortMode = MutableLiveData(ListaSortMode.ALPHABETIC)
+    private val _userLatLng = MutableLiveData<Pair<Double, Double>?>()
 
-    val categoriasDisponibles: StateFlow<List<String>> =
-        repository.observeEmpresas()
-            .map { catalogo -> distinctCategoriesSorted(catalogo) }
-            .distinctUntilChanged()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList(),
-            )
+    // Exponemos solo lectura para el Fragmento
+    val categoriasFiltro: LiveData<Set<String>> get() = _categoriasFiltro
+    val ciudadesFiltro: LiveData<Set<String>> get() = _ciudadesFiltro
 
-    val empresas: StateFlow<List<Empresa>> =
-        combine(nombreFilter, localidadFilter, categoriaFiltro) { nombre, loc, cat ->
-            Triple(nombre, loc, cat)
-        }.distinctUntilChanged()
-            .flatMapLatest { (nombre, loc, cat) ->
-                combine(
-                    repository.observeFilteredEmpresas(nombre, loc),
-                    sortMode,
-                    userLatLng,
-                ) { listadoSql, mode, ubicacionUsuario ->
-                    val despuesDeCategoria =
-                        if (cat.isNullOrBlank()) {
-                            listadoSql
-                        } else {
-                            listadoSql.filter { empresa ->
-                                empresa.informacion.actividades.any { actividad ->
-                                    actividad.categoria.equals(cat, ignoreCase = true)
-                                }
-                            }
-                        }
-                    ordenarLista(despuesDeCategoria, mode, ubicacionUsuario)
-                }
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList(),
-            )
+    // =====================================================================
+    // 2. EXTRACCIÓN DE DATOS PREDETERMINADOS (Para los menús flotantes)
+    // =====================================================================
 
-    /** Restaura filtros persistidos antes de registrar listeners textuales. */
-    fun restorePersisted(snapshot: ListPersistedState) {
-        nombreFilter.value = snapshot.nombreFilter
-        localidadFilter.value = snapshot.localidadFilter
-        categoriaFiltro.value = snapshot.categoriaFiltro?.takeUnless { it.isBlank() }
-        _preferGridOnMobile.value = snapshot.preferGridOnMobile
-        sortMode.value =
-            if (snapshot.proximitySortSelected) ListaSortMode.BY_PROXIMITY else ListaSortMode.ALPHABETIC
-    }
-
-    /** Snapshot actual para persistir al salir (texto de filtros puede venir de la vista). */
-    fun buildPersistSnapshot(
-        nombreFromField: String,
-        localidadFromField: String,
-    ): ListPersistedState =
-        ListPersistedState(
-            nombreFilter = nombreFromField,
-            localidadFilter = localidadFromField,
-            categoriaFiltro = categoriaFiltro.value?.takeUnless { it.isBlank() },
-            preferGridOnMobile = _preferGridOnMobile.value,
-            proximitySortSelected = sortMode.value == ListaSortMode.BY_PROXIMITY,
-        )
-
-    /**
-     * Estado de filtros y opciones tal como están en el ViewModel (sobrevive rotación de pantalla).
-     * La vista lo usa para rellenar campos sin volver a leer preferencias, que podrían estar desactualizadas.
-     */
-    fun readPersistableUiState(): ListPersistedState =
-        ListPersistedState(
-            nombreFilter = nombreFilter.value,
-            localidadFilter = localidadFilter.value,
-            categoriaFiltro = categoriaFiltro.value?.takeUnless { it.isBlank() },
-            preferGridOnMobile = _preferGridOnMobile.value,
-            proximitySortSelected = sortMode.value == ListaSortMode.BY_PROXIMITY,
-        )
-
-    fun setNombreFilter(text: String) {
-        nombreFilter.value = text
-    }
-
-    fun setLocalidadFilter(text: String) {
-        localidadFilter.value = text
-    }
-
-    fun setCategoriaFiltro(categoria: String?) {
-        val t = categoria?.trim().orEmpty()
-        categoriaFiltro.value = t.ifEmpty { null }
-    }
-
-    fun setAlphabetSort() {
-        sortMode.value = ListaSortMode.ALPHABETIC
-    }
-
-    fun setProximitySort() {
-        sortMode.value = ListaSortMode.BY_PROXIMITY
-    }
-
-    fun updateUserLatLng(lat: Double, lng: Double) {
-        userLatLng.value = Pair(lat, lng)
-    }
-
-    /** Desactiva ubicación conocida hasta la próxima lectura (p.ej. trazas de ubicación rechazadas). */
-    fun clearUserLatLng() {
-        userLatLng.value = null
-    }
-
-    fun setPreferGridOnMobile(pref: Boolean) {
-        _preferGridOnMobile.value = pref
-    }
-
-    companion object {
-        private fun distinctCategoriesSorted(empresas: List<Empresa>): List<String> {
-            val byLowerKey = LinkedHashMap<String, String>()
-            for (empresa in empresas) {
-                for (actividad in empresa.informacion.actividades) {
-                    val c = actividad.categoria.trim()
-                    if (c.isEmpty()) continue
-                    val key = c.lowercase(Locale.getDefault())
-                    if (!byLowerKey.containsKey(key)) {
-                        byLowerKey[key] = c
+    val categoriasDisponibles: LiveData<List<String>> = repository.observaEmpresas()
+        .map { listaEmpresas ->
+            val categoriasUnicas = mutableSetOf<String>()
+            listaEmpresas.forEach { empresa ->
+                empresa.informacion.actividades.forEach { actividad ->
+                    if (actividad.categoria.isNotBlank()) {
+                        categoriasUnicas.add(actividad.categoria.trim())
                     }
                 }
             }
-            return byLowerKey.values.sortedWith(
-                compareBy { it.lowercase(Locale.getDefault()) },
-            )
+            categoriasUnicas.toList().sorted()
+        }
+        .asLiveData(viewModelScope.coroutineContext)
+
+    val ciudadesDisponibles: LiveData<List<String>> = repository.observaEmpresas()
+        .map { listaEmpresas ->
+            val ciudadesUnicas = mutableSetOf<String>()
+            listaEmpresas.forEach { empresa ->
+                val localidad = empresa.contacto.localidad
+                if (localidad.isNotBlank()) {
+                    ciudadesUnicas.add(localidad.trim())
+                }
+            }
+            ciudadesUnicas.toList().sorted()
+        }
+        .asLiveData(viewModelScope.coroutineContext)
+
+    // =====================================================================
+    // 3. LA BATIDORA (El motor de filtrado y ordenación)
+    // =====================================================================
+
+    // Agrupamos los 3 filtros en un "Triple" para no superar el límite de combine
+    private val filtrosCombinados = combine(
+        _nombreFilter.asFlow(),
+        _categoriasFiltro.asFlow(),
+        _ciudadesFiltro.asFlow()
+    ) { nombre, categorias, ciudades ->
+        Triple(nombre, categorias, ciudades)
+    }
+
+    // Agrupamos la ordenación y el GPS en un "Pair"
+    private val ordenCombinado = combine(
+        _sortMode.asFlow(),
+        _userLatLng.asFlow()
+    ) { modo, gps ->
+        Pair(modo, gps)
+    }
+
+    // Ahora sí, combinamos la Base de Datos con nuestros dos grupos
+    val empresas: LiveData<List<Empresa>> = combine(
+        repository.observaEmpresas(),
+        filtrosCombinados,
+        ordenCombinado
+    ) { todasLasEmpresas, filtros, orden ->
+
+        // Desempaquetamos los grupos para usarlos cómodamente
+        val textoBuscado = filtros.first
+        val categoriasMarcadas = filtros.second
+        val ciudadesMarcadas = filtros.third
+
+        val modoOrden = orden.first
+        val ubicacion = orden.second
+
+        var listaResultante = todasLasEmpresas
+
+        // FILTRO A: Por nombre en la lupa
+        if (textoBuscado.isNotBlank()) {
+            listaResultante = listaResultante.filter { empresa ->
+                empresa.nombre.contains(textoBuscado, ignoreCase = true)
+            }
         }
 
-        private fun ordenarLista(
-            filtradas: List<Empresa>,
-            mode: ListaSortMode,
-            ubicacionUsuario: Pair<Double, Double>?,
-        ): List<Empresa> {
-            val alfabetico = Comparator<Empresa> { a, b ->
-                a.nombre.lowercase(Locale.getDefault()).compareTo(b.nombre.lowercase(Locale.getDefault()))
-            }
-            if (mode != ListaSortMode.BY_PROXIMITY || ubicacionUsuario == null) {
-                return filtradas.sortedWith(alfabetico)
-            }
-            val (uLat, uLng) = ubicacionUsuario
-            return filtradas.sortedWith(
-                compareBy<Empresa> { empresa ->
-                    val c = empresa.coordenadas
-                    if (!c.isLikelyGeocoded()) {
-                        Double.MAX_VALUE
-                    } else {
-                        GeoDistance.metersBetween(uLat, uLng, c.lat, c.lng)
+        // FILTRO B: Por categorías (Si coincide alguna de las seleccionadas)
+        if (categoriasMarcadas.isNotEmpty()) {
+            listaResultante = listaResultante.filter { empresa ->
+                empresa.informacion.actividades.any { actividad ->
+                    categoriasMarcadas.any { seleccion ->
+                        seleccion.equals(actividad.categoria, ignoreCase = true)
                     }
-                }.then(alfabetico),
-            )
+                }
+            }
         }
-    }
+
+        // FILTRO C: Por ciudades
+        if (ciudadesMarcadas.isNotEmpty()) {
+            listaResultante = listaResultante.filter { empresa ->
+                ciudadesMarcadas.any { ciudadMarcada ->
+                    ciudadMarcada.equals(empresa.contacto.localidad, ignoreCase = true)
+                }
+            }
+        }
+
+        // ORDENACIÓN FINAL
+        if (modoOrden == ListaSortMode.BY_PROXIMITY && ubicacion != null) {
+            val (uLat, uLng) = ubicacion
+            listaResultante = listaResultante.sortedBy { empresa ->
+                if (empresa.coordenadas.isLikelyGeocoded()) {
+                    GeoDistance.metersBetween(uLat, uLng, empresa.coordenadas.lat, empresa.coordenadas.lng)
+                } else {
+                    Double.MAX_VALUE // Sin coordenadas, al final de la lista
+                }
+            }
+        } else {
+            listaResultante = listaResultante.sortedBy { empresa ->
+                empresa.nombre.lowercase(Locale.getDefault())
+            }
+        }
+
+        listaResultante
+    }.asLiveData(viewModelScope.coroutineContext)
+
+    // =====================================================================
+    // 4. LOS MANDOS (Para modificar los datos desde el Fragmento)
+    // =====================================================================
+
+    fun setNombreFilter(nombre: String) { _nombreFilter.value = nombre }
+
+    fun setCategorias(categorias: Set<String>) { _categoriasFiltro.value = categorias }
+
+    fun setCiudades(ciudades: Set<String>) { _ciudadesFiltro.value = ciudades }
+
+    fun setAlphabetSort() { _sortMode.value = ListaSortMode.ALPHABETIC }
+
+    fun setProximitySort() { _sortMode.value = ListaSortMode.BY_PROXIMITY }
+
+    fun updateUserLatLng(lat: Double, lng: Double) { _userLatLng.value = Pair(lat, lng) }
 }
