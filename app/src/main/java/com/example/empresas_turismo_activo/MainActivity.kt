@@ -1,5 +1,6 @@
 package com.example.empresas_turismo_activo
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Menu
@@ -20,6 +21,7 @@ import androidx.navigation.ui.NavigationUI
 import com.example.empresas_turismo_activo.data.preferences.LocalePreferences
 import com.example.empresas_turismo_activo.data.preferences.NightModePreferences
 import com.example.empresas_turismo_activo.databinding.ActivityMainBinding
+import com.example.empresas_turismo_activo.ui.settings.AjustesActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -39,11 +41,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         runBlocking {
-            // Idioma
             val tagIdioma = localePreferences.getLocaleTag().first()
             AppCompatDelegate.setApplicationLocales(localePreferences.localeListForTag(tagIdioma))
 
-            // Tema Oscuro
             val modoOscuro = nightModePreferences.getModoTema().first()
             AppCompatDelegate.setDefaultNightMode(modoOscuro)
         }
@@ -134,17 +134,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-
-            R.id.tema_menu -> {
-                mostrarDialogoTema()
+            R.id.action_settings -> {
+                val intent = Intent(this, AjustesActivity::class.java)
+                startActivity(intent)
                 true
             }
-
-            R.id.idioma -> {
-                mostrarDialogoIdioma()
-                true
-            }
-
             else -> super.onOptionsItemSelected(item)
         }
     }
