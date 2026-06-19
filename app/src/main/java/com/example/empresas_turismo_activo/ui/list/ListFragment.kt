@@ -65,8 +65,9 @@ class ListFragment : Fragment() {
         binding.recyclerEmpresas.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerEmpresas.adapter = adapter
 
-        // Cajita para guardar las categorías que nos manda la base de datos
+        // Cajitas para guardar las categorías y ciudades de la base de datos
         var listaCategoriasDisponibles = emptyList<String>()
+        var listaCiudadesDisponibles = emptyList<String>()
 
         // 1. Escuchar el buscador
         binding.inputBuscar.doAfterTextChanged { text ->
@@ -92,13 +93,18 @@ class ListFragment : Fragment() {
 
         // 3. Abrir el menú flotante al pulsar en Categorías
         binding.chipFiltroCategorias.setOnClickListener {
-            // El .value de LiveData puede ser null, le ponemos un fallback a emptySet()
             val seleccionesActuales = viewModel.categoriasFiltro.value ?: emptySet()
             mostrarDialogoMultiseleccion(listaCategoriasDisponibles, seleccionesActuales)
         }
 
+        // 4. Abrir el menú flotante al pulsar en Ciudad
+        binding.chipFiltroCiudad.setOnClickListener {
+            val seleccionesActuales = viewModel.ciudadesFiltro.value ?: emptySet()
+            mostrarDialogoCiudades(listaCiudadesDisponibles, seleccionesActuales)
+        }
+
         // =====================================================================
-        // 4. OBSERVAR EL VIEWMODEL (VERSIÓN LIVEDATA CLÁSICA DE CLASE)
+        // 5. OBSERVAR EL VIEWMODEL
         // =====================================================================
 
         // A. Pintar la lista de empresas
@@ -111,12 +117,26 @@ class ListFragment : Fragment() {
             listaCategoriasDisponibles = categorias
         }
 
-        // C. Cambiar el texto del botón si hay filtros activos
+        // C. Guardar las ciudades para el menú
+        viewModel.ciudadesDisponibles.observe(viewLifecycleOwner) { ciudades ->
+            listaCiudadesDisponibles = ciudades
+        }
+
+        // D. Cambiar el texto del chip si hay filtros activos
         viewModel.categoriasFiltro.observe(viewLifecycleOwner) { seleccionadas ->
             if (seleccionadas.isNullOrEmpty()) {
                 binding.chipFiltroCategorias.text = "Categorías"
             } else {
                 binding.chipFiltroCategorias.text = "Categorías (${seleccionadas.size})"
+            }
+        }
+
+        // E. Cambiar el texto del chip de ciudad si hay filtros activos
+        viewModel.ciudadesFiltro.observe(viewLifecycleOwner) { seleccionadas ->
+            if (seleccionadas.isNullOrEmpty()) {
+                binding.chipFiltroCiudad.text = "Ciudad"
+            } else {
+                binding.chipFiltroCiudad.text = "Ciudad (${seleccionadas.size})"
             }
         }
     }
@@ -154,6 +174,36 @@ class ListFragment : Fragment() {
             .show()
     }
 
+    private fun mostrarDialogoCiudades(todasLasCiudades: List<String>, seleccionesActuales: Set<String>) {
+        val items = todasLasCiudades.toTypedArray()
+
+        val checkedItems = BooleanArray(todasLasCiudades.size) { index ->
+            seleccionesActuales.contains(todasLasCiudades[index])
+        }
+
+        val nuevasSelecciones = seleccionesActuales.toMutableSet()
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Filtrar por ciudad")
+            .setMultiChoiceItems(items, checkedItems) { _, which, isChecked ->
+                val ciudadTocada = items[which]
+                if (isChecked) {
+                    nuevasSelecciones.add(ciudadTocada)
+                } else {
+                    nuevasSelecciones.remove(ciudadTocada)
+                }
+            }
+            .setPositiveButton("Aplicar") { _, _ ->
+                viewModel.setCiudades(nuevasSelecciones)
+                binding.recyclerEmpresas.scrollToPosition(0)
+            }
+            .setNegativeButton("Limpiar todo") { _, _ ->
+                viewModel.setCiudades(emptySet())
+                binding.recyclerEmpresas.scrollToPosition(0)
+            }
+            .show()
+    }
+
     // =====================================================================
     // FUNCIONES DE UBICACIÓN
     // =====================================================================
@@ -183,6 +233,7 @@ class ListFragment : Fragment() {
                     Snackbar.make(binding.root, "Ubicación no disponible", Snackbar.LENGTH_SHORT).show()
                     binding.chipSortProximity.isChecked = false
                     binding.chipSortAlphabet.isChecked = true
+                    viewModel.setAlphabetSort()
                 }
             }
         } catch (e: SecurityException) {

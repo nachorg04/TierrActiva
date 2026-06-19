@@ -20,36 +20,34 @@ import com.example.empresas_turismo_activo.data.model.RedSocial
 )
 data class EmpresaEntity(
     @PrimaryKey
-    @ColumnInfo(name = "id")
-    val id: String,
-    @ColumnInfo(name = "nombre")
+    val id: String, // Room asume que la columna es "id"
+
     val nombre: String,
-    @ColumnInfo(name = "concejo")
     val concejo: String,
-    @ColumnInfo(name = "direccion")
     val direccion: String?,
-    @ColumnInfo(name = "localidad")
     val localidad: String,
-    @ColumnInfo(name = "telefonos")
     val telefonos: List<String>,
-    @ColumnInfo(name = "emails")
     val emails: List<String>,
+    val web: String?,
+    val lat: Double,
+    val lng: Double,
+    val actividades: List<Actividad>,
+
+    // ==========================================================
+    // EXCEPCIONES: Mapeos de camelCase (Kotlin) a snake_case (SQL)
+    // ==========================================================
     @ColumnInfo(name = "redes_sociales")
     val redesSociales: List<RedSocial>,
-    @ColumnInfo(name = "web")
-    val web: String?,
-    @ColumnInfo(name = "lat")
-    val lat: Double,
-    @ColumnInfo(name = "lng")
-    val lng: Double,
+
     @ColumnInfo(name = "imagen_portada")
     val imagenPortada: String,
+
     @ColumnInfo(name = "titulo_informacion")
     val tituloInformacion: String,
+
     @ColumnInfo(name = "descripcion_informacion")
     val descripcionInformacion: String,
+
     @ColumnInfo(name = "zona_actividad")
     val zonaActividad: String,
-    @ColumnInfo(name = "actividades")
-    val actividades: List<Actividad>,
 )

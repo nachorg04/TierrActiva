@@ -1,9 +1,9 @@
 package com.example.empresas_turismo_activo.data.remote.dto
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class ActividadDto(
-    @SerializedName("nombre") val nombre: String?,
-    @SerializedName("imagen_url") val imagenUrl: String?,
-    @SerializedName("categoria") val categoria: String?,
+    val nombre: String?,
+    @Json(name = "imagen_url") val imagenUrl: String?,
+    val categoria: String?,
 )

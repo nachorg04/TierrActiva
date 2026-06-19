@@ -3,50 +3,75 @@ package com.example.empresas_turismo_activo.data.local.converter
 import androidx.room.TypeConverter
 import com.example.empresas_turismo_activo.data.model.Actividad
 import com.example.empresas_turismo_activo.data.model.RedSocial
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 /**
- * Convierte estructuras de lista u objetos anidados a texto JSON y viceversa para columnas ROOM únicas,
- * usando Gson como formato estable almacenado en la tabla física empresas_table.
+ * Convierte estructuras de lista a texto JSON y viceversa usando Moshi.
+ * Ideal para Kotlin porque respeta la nulabilidad de las variables (Null-Safety).
  */
 class EmpresaConverters {
 
-    private val gson = Gson()
+    // 1. Preparamos nuestro traductor Moshi con soporte nativo para Kotlin
+    private val moshi = Moshi.Builder()
+        .addLast(KotlinJsonAdapterFactory())
+        .build()
 
-    /**
-     * Persiste colecciones de cadenas (teléfonos o correos); comparten conversor porque JVM ve el mismo tipo
-     * subyacente y Room solo permite una pareja entrada/salida por firma JVM.
-     */
+    // 2. Creamos los "Moldes" (Adaptadores) para cada tipo exacto de lista que tenemos
+    private val stringListType = Types.newParameterizedType(List::class.java, String::class.java)
+    private val stringListAdapter = moshi.adapter<List<String>>(stringListType)
+
+    private val redesListType = Types.newParameterizedType(List::class.java, RedSocial::class.java)
+    private val redesListAdapter = moshi.adapter<List<RedSocial>>(redesListType)
+
+    private val actividadesListType = Types.newParameterizedType(List::class.java, Actividad::class.java)
+    private val actividadesListAdapter = moshi.adapter<List<Actividad>>(actividadesListType)
+
+    // =====================================================================
+    // CONVERSORES PARA LISTAS DE TEXTO (Teléfonos y Emails)
+    // =====================================================================
+
     @TypeConverter
     fun stringListFromJson(value: String?): List<String> {
         if (value.isNullOrBlank()) return emptyList()
-        val type = object : TypeToken<List<String>>() {}.type
-        return gson.fromJson(value, type) ?: emptyList()
+        // Usamos el molde para leer el JSON y convertirlo en Lista
+        return stringListAdapter.fromJson(value) ?: emptyList()
     }
 
     @TypeConverter
-    fun stringListToJson(list: List<String>?): String = gson.toJson(list.orEmpty())
+    fun stringListToJson(list: List<String>?): String {
+        // Usamos el molde para aplastar la Lista y convertirla en JSON
+        return stringListAdapter.toJson(list.orEmpty())
+    }
 
-    /** Serializa objetos RedSocial cuando la empresa publica redes adicionales. */
+    // =====================================================================
+    // CONVERSORES PARA REDES SOCIALES
+    // =====================================================================
+
     @TypeConverter
     fun redesFromJson(value: String?): List<RedSocial> {
         if (value.isNullOrBlank()) return emptyList()
-        val type = object : TypeToken<List<RedSocial>>() {}.type
-        return gson.fromJson(value, type) ?: emptyList()
+        return redesListAdapter.fromJson(value) ?: emptyList()
     }
 
     @TypeConverter
-    fun redesToJson(list: List<RedSocial>?): String = gson.toJson(list.orEmpty())
+    fun redesToJson(list: List<RedSocial>?): String {
+        return redesListAdapter.toJson(list.orEmpty())
+    }
 
-    /** Guarda el listado de actividades respetando claves JSON de redacción del API (p. ej. imagen_url). */
+    // =====================================================================
+    // CONVERSORES PARA ACTIVIDADES
+    // =====================================================================
+
     @TypeConverter
     fun actividadesFromJson(value: String?): List<Actividad> {
         if (value.isNullOrBlank()) return emptyList()
-        val type = object : TypeToken<List<Actividad>>() {}.type
-        return gson.fromJson(value, type) ?: emptyList()
+        return actividadesListAdapter.fromJson(value) ?: emptyList()
     }
 
     @TypeConverter
-    fun actividadesToJson(list: List<Actividad>?): String = gson.toJson(list.orEmpty())
+    fun actividadesToJson(list: List<Actividad>?): String {
+        return actividadesListAdapter.toJson(list.orEmpty())
+    }
 }

@@ -10,10 +10,11 @@ import com.example.empresas_turismo_activo.data.local.db.AppDatabase
 import com.example.empresas_turismo_activo.data.remote.EmpresaApiService
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepositoryImpl
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
-import com.google.gson.Gson
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.flow.first
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 
 /**
  * Punto único donde se construye el grafo liviano antes de tener un contenedor DI completo (Hilt, Koin…).
@@ -27,20 +28,30 @@ class TurismoApplication : Application() {
 
     private val database by lazy { AppDatabase.getInstance(applicationContext) }
 
-    /** Instancia Gson compartida para que Retrofit deserialize el mismo contrato que documenta el Gist. */
-    private val gson: Gson by lazy { Gson() }
+    // =====================================================================
+    // CONFIGURACIÓN DE RED (MOSHI + RETROFIT)
+    // =====================================================================
 
-    /** Base con barra final obligatoria por contrato de Retrofit. */
+    private val moshi: Moshi by lazy {
+        Moshi.Builder()
+            .addLast(KotlinJsonAdapterFactory())
+            .build()
+    }
+
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(GIST_RAW_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
     }
 
     private val empresaApi: EmpresaApiService by lazy {
         retrofit.create(EmpresaApiService::class.java)
     }
+
+    // =====================================================================
+    // REPOSITORIO GLOBAL
+    // =====================================================================
 
     /** Fuente única compartida para ViewModels tras la refactorización MVP. */
     val empresaRepository: EmpresaRepository by lazy {
