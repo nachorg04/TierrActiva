@@ -10,8 +10,8 @@ fun Empresa.normalizar(): Empresa? {
         nombre = nombre.oVacio(),
         imagenPortada = imagenPortada.oVacio(),
         contacto = contactoN.copy(
-            concejo = contactoN.concejo.oVacio(),
-            localidad = contactoN.localidad.oVacio(),
+            concejo = contactoN.concejo.oVacio().let { if (it.contains("?")) "" else it },
+            localidad = contactoN.localidad.oVacio().let { if (it.contains("?")) "" else it },
             telefonos = contactoN.telefonos.orEmpty(),
             emails = contactoN.emails.orEmpty(),
             redesSociales = contactoN.redesSociales.orEmpty(),

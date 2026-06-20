@@ -47,7 +47,7 @@ class ListViewModel(
 
     val ciudadesDisponibles: LiveData<List<String>> = repository.observaEmpresas()
         .map { empresas ->
-            empresas.mapNotNull { it.contacto?.localidad?.trim()?.takeIf { l -> l.isNotEmpty() } }
+            empresas.mapNotNull { it.contacto?.localidad?.trim()?.takeIf { l -> l.isNotEmpty() && !l.contains("?") } }
                 .distinct().sorted()
         }
         .asLiveData(viewModelScope.coroutineContext)
