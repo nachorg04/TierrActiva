@@ -6,10 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentMapBinding
@@ -20,11 +18,11 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-/** Mapa empresarial: marcadores por coordenadas y salto Safe Args al detalle desde InfoWindow. */
 class MapFragment : Fragment() {
+
+    private val args: MapFragmentArgs by navArgs()
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = requireNotNull(_binding)
@@ -35,6 +33,7 @@ class MapFragment : Fragment() {
     }
 
     private var googleMap: GoogleMap? = null
+    private var centeredOnFocus = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,36 +59,40 @@ class MapFragment : Fragment() {
                 findNavController().navigate(action)
             }
 
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.empresas.collect(::applyEmpresasToMap)
-                }
-            }
+            viewModel.empresas.observe(viewLifecycleOwner, ::aplicarEmpresasAlMapa)
         }
     }
 
-    private fun applyEmpresasToMap(list: List<Empresa>) {
+    private fun aplicarEmpresasAlMapa(list: List<Empresa>) {
         val map = googleMap ?: return
         map.clear()
 
-        val withCoords = list.filter(::hasMeaningfulCoords)
+        val withCoords = list.filter(::tieneCoordenadasValidas)
         if (withCoords.isEmpty()) return
 
         val boundsBuilder = LatLngBounds.builder()
         for (empresa in withCoords) {
-            val latLng = LatLng(empresa.coordenadas.lat, empresa.coordenadas.lng)
+            val coords = empresa.coordenadas ?: continue
+            val latLng = LatLng(coords.lat ?: 0.0, coords.lng ?: 0.0)
             boundsBuilder.include(latLng)
             map.addMarker(
                 MarkerOptions()
                     .position(latLng)
                     .title(empresa.nombre)
-                    .snippet(empresa.contacto.localidad),
+                    .snippet(empresa.contacto?.localidad),
             )?.tag = empresa.id
         }
 
         val paddingPx = resources.getDimensionPixelOffset(R.dimen.map_bounds_padding)
-        if (withCoords.size == 1) {
-            val only = LatLng(withCoords.first().coordenadas.lat, withCoords.first().coordenadas.lng)
+
+        val focusLat = args.focusLat.toDouble()
+        val focusLng = args.focusLng.toDouble()
+        if (!centeredOnFocus && focusLat != 0.0 && focusLng != 0.0) {
+            centeredOnFocus = true
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(focusLat, focusLng), 14f))
+        } else if (withCoords.size == 1) {
+            val coords = withCoords.first().coordenadas ?: return
+            val only = LatLng(coords.lat ?: 0.0, coords.lng ?: 0.0)
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(only, SINGLE_MARKER_ZOOM))
         } else {
             val bounds = boundsBuilder.build()
@@ -103,9 +106,10 @@ class MapFragment : Fragment() {
         }
     }
 
-    private fun hasMeaningfulCoords(e: Empresa): Boolean {
-        val lat = e.coordenadas.lat
-        val lng = e.coordenadas.lng
+    private fun tieneCoordenadasValidas(e: Empresa): Boolean {
+        val coords = e.coordenadas ?: return false
+        val lat = coords.lat ?: return false
+        val lng = coords.lng ?: return false
         if (!lat.isFinite() || !lng.isFinite()) return false
         if (abs(lat) < 1e-6 && abs(lng) < 1e-6) return false
         return true

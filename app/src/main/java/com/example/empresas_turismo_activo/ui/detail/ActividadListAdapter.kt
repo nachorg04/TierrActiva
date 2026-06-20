@@ -10,7 +10,6 @@ import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.databinding.ItemActividadBinding
 import com.example.empresas_turismo_activo.data.model.Actividad
 
-/** Lista de actividades con miniatura Coil alineado al JSON remoto (`imagenUrl`). */
 class ActividadListAdapter : ListAdapter<Actividad, ActividadListAdapter.ActividadViewHolder>(DIFF) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActividadViewHolder {
@@ -20,14 +19,14 @@ class ActividadListAdapter : ListAdapter<Actividad, ActividadListAdapter.Activid
     }
 
     override fun onBindViewHolder(holder: ActividadViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.vincular(getItem(position))
     }
 
     class ActividadViewHolder(
         private val binding: ItemActividadBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: Actividad) {
+        fun vincular(item: Actividad) {
             binding.textNombreActividad.text = item.nombre
             binding.textCategoriaActividad.text = item.categoria
             binding.imageActividad.load(item.imagenUrl) {

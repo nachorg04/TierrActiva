@@ -26,7 +26,7 @@
             android:id="@+id/inputBuscar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Buscar empresa..."
+            android:hint="@string/search_hint"
             android:inputType="text"
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -51,14 +51,14 @@
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="A-Z" />
+                android:text="@string/chip_sort_az" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipSortProximity"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cerca de mí" />
+                android:text="@string/chip_sort_proximity" />
 
             <View
                 android:layout_width="1dp"
@@ -71,7 +71,7 @@
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Categorías"
+                android:text="@string/chip_categories"
                 app:chipIcon="@android:drawable/ic_menu_sort_by_size"
                 android:checkable="false" />
 
@@ -80,7 +80,7 @@
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ciudad"
+                android:text="@string/chip_city"
                 app:chipIcon="@android:drawable/ic_menu_sort_by_size"
                 android:checkable="false" />
 

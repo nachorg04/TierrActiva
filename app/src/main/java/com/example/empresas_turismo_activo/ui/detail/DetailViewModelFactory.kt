@@ -4,9 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 
-/**
- * Entrega una instancia parametrizada con el argumento estable de navegación [empresaId].
- */
 class DetailViewModelFactory(
     private val repository: EmpresaRepository,
     private val empresaId: String,

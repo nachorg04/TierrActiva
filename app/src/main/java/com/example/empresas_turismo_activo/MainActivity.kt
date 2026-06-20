@@ -14,39 +14,26 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
-import com.example.empresas_turismo_activo.data.preferences.LocalePreferences
-import com.example.empresas_turismo_activo.data.preferences.NightModePreferences
+import com.example.empresas_turismo_activo.data.preferences.AppPreferences
 import com.example.empresas_turismo_activo.databinding.ActivityMainBinding
 import com.example.empresas_turismo_activo.ui.settings.AjustesActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val localePreferences: LocalePreferences
-        get() = (application as TurismoApplication).localePreferences
-
-    private val nightModePreferences: NightModePreferences
-        get() = (application as TurismoApplication).nightModePreferences
+    private val appPreferences: AppPreferences
+        get() = (application as TurismoApplication).appPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        runBlocking {
-            val tagIdioma = localePreferences.getLocaleTag().first()
-            AppCompatDelegate.setApplicationLocales(localePreferences.localeListForTag(tagIdioma))
-
-            val modoOscuro = nightModePreferences.getModoTema().first()
-            AppCompatDelegate.setDefaultNightMode(modoOscuro)
-        }
+        AppCompatDelegate.setApplicationLocales(appPreferences.listaIdiomaParaTag(appPreferences.obtenerTagIdioma()))
+        AppCompatDelegate.setDefaultNightMode(appPreferences.obtenerModoTema())
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -80,20 +67,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun mostrarDialogoTema() {
-        lifecycleScope.launch {
-            val modoActual = nightModePreferences.getModoTema().first()
+        val modoActual = appPreferences.obtenerModoTema()
 
-            val posicionSeleccionada = when (modoActual) {
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> 0
-                AppCompatDelegate.MODE_NIGHT_NO -> 1
-                AppCompatDelegate.MODE_NIGHT_YES -> 2
-                else -> 0
-            }
+        val posicionSeleccionada = when (modoActual) {
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> 0
+            AppCompatDelegate.MODE_NIGHT_NO -> 1
+            AppCompatDelegate.MODE_NIGHT_YES -> 2
+            else -> 0
+        }
 
-        val opciones = arrayOf("Preferencia del Sistema", "Modo Claro", "Modo Oscuro")
+        val opciones = arrayOf(
+            getString(R.string.theme_option_system),
+            getString(R.string.theme_option_light),
+            getString(R.string.theme_option_dark),
+        )
 
         MaterialAlertDialogBuilder(this@MainActivity)
-            .setTitle("Elige el tema")
+            .setTitle(getString(R.string.theme_dialog_title))
             .setSingleChoiceItems(opciones, posicionSeleccionada) { dialog, posicion ->
                 when (posicion) {
                     0 -> aplicarTema(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -103,33 +93,34 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .show()
-        }
     }
 
     private fun mostrarDialogoIdioma() {
-        lifecycleScope.launch {
-            val idiomaActual = localePreferences.getLocaleTag().first()
+        val idiomaActual = appPreferences.obtenerTagIdioma()
 
-            val posicionSeleccionada = when (idiomaActual) {
-                "es" -> 1
-                "en" -> 2
-                else -> 0
-            }
-
-            val opciones = arrayOf("Preferencia del Sistema", "Español", "English")
-
-            MaterialAlertDialogBuilder(this@MainActivity)
-                .setTitle("Elige el idioma")
-                .setSingleChoiceItems(opciones, posicionSeleccionada) { dialog, posicion ->
-                    when (posicion) {
-                        0 -> aplicarIdioma("")
-                        1 -> aplicarIdioma("es")
-                        2 -> aplicarIdioma("en")
-                    }
-                    dialog.dismiss()
-                }
-                .show()
+        val posicionSeleccionada = when (idiomaActual) {
+            "es" -> 1
+            "en" -> 2
+            else -> 0
         }
+
+        val opciones = arrayOf(
+            getString(R.string.language_system),
+            getString(R.string.language_spanish),
+            getString(R.string.language_english),
+        )
+
+        MaterialAlertDialogBuilder(this@MainActivity)
+            .setTitle(getString(R.string.language_dialog_title))
+            .setSingleChoiceItems(opciones, posicionSeleccionada) { dialog, posicion ->
+                when (posicion) {
+                    0 -> aplicarIdioma("")
+                    1 -> aplicarIdioma("es")
+                    2 -> aplicarIdioma("en")
+                }
+                dialog.dismiss()
+            }
+            .show()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -142,19 +133,13 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-    private fun aplicarTema(modo: Int){
-        lifecycleScope.launch {
-            nightModePreferences.setThemeMode(modo)
-            AppCompatDelegate.setDefaultNightMode(modo)
-        }
+    private fun aplicarTema(modo: Int) {
+        appPreferences.guardarModoTema(modo)
+        AppCompatDelegate.setDefaultNightMode(modo)
     }
 
-    private fun aplicarIdioma(idioma: String){
-        lifecycleScope.launch {
-            localePreferences.setLocaleTag(idioma)
-            AppCompatDelegate.setApplicationLocales(localePreferences.localeListForTag(idioma))
-        }
+    private fun aplicarIdioma(idioma: String) {
+        appPreferences.guardarTagIdioma(idioma)
+        AppCompatDelegate.setApplicationLocales(appPreferences.listaIdiomaParaTag(idioma))
     }
 }
-
-

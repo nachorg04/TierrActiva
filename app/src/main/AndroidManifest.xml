@@ -33,7 +33,7 @@
         </activity>
         <activity
             android:name=".ui.settings.AjustesActivity"
-            android:label="Ajustes" />
+            android:label="@string/ajustes_title" />
 </application>
 
 </manifest>

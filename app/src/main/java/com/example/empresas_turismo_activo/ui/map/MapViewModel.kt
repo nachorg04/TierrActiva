@@ -1,23 +1,24 @@
 package com.example.empresas_turismo_activo.ui.map
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.empresas_turismo_activo.data.model.Empresa
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-/** Expone catálogo reactivo de Room igual que lista; sirve solo para ubicar marcadores. */
 class MapViewModel(
     repository: EmpresaRepository,
 ) : ViewModel() {
 
-    val empresas: StateFlow<List<Empresa>> = repository
-        .observaEmpresas()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList(),
-        )
+    private val _empresas = MutableLiveData<List<Empresa>>(emptyList())
+    val empresas: LiveData<List<Empresa>> = _empresas
+
+    init {
+        viewModelScope.launch {
+            repository.sincronizaEmpresas()
+            repository.observaEmpresas().collect { _empresas.value = it }
+        }
+    }
 }

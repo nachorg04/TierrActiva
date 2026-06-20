@@ -6,9 +6,6 @@ import com.example.empresas_turismo_activo.data.local.entity.EmpresaEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * Catálogo mínimo compartido por pruebas instrumentadas que dependen de Room + UI.
- */
 object InstrumentedDbFixtures {
 
     const val SEED_COMPANY_ID: String = "instrumented_seed_1"
@@ -16,9 +13,9 @@ object InstrumentedDbFixtures {
 
     suspend fun replaceCatalogWithSingleTestCompany(context: Context) {
         withContext(Dispatchers.IO) {
-            val dao = AppDatabase.getInstance(context).empresaDao()
-            dao.clearAllCompanies()
-            dao.insertAll(listOf(seedEntity()))
+            val dao = AppDatabase.obtenerInstancia(context).empresaDao()
+            dao.eliminarTodo()
+            dao.insertarTodo(listOf(seedEntity()))
         }
     }
 
@@ -26,19 +23,10 @@ object InstrumentedDbFixtures {
         EmpresaEntity(
             id = SEED_COMPANY_ID,
             nombre = SEED_COMPANY_NAME,
-            concejo = "Test",
-            direccion = null,
             localidad = "Oviedo",
-            telefonos = emptyList(),
-            emails = emptyList(),
-            redesSociales = emptyList(),
-            web = null,
+            direccion = null,
             lat = 43.3623,
             lng = -5.8493,
             imagenPortada = "",
-            tituloInformacion = "Info",
-            descripcionInformacion = "Desc",
-            zonaActividad = "Asturias",
-            actividades = emptyList(),
         )
 }

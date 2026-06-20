@@ -11,9 +11,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="4dp"
-        android:minHeight="?attr/actionBarSize"
-        android:paddingBottom="10dp"
-        app:title="Ajustes" />
+        android:minHeight="48dp"
+        android:paddingBottom="4dp"
+        app:title="@string/ajustes_title" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -33,14 +33,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tema visual"
+                android:text="@string/settings_theme_label"
                 android:textSize="18sp"
                 android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cambiar entre modo claro, oscuro o sistema"
+                android:text="@string/settings_theme_description"
                 android:textSize="14sp"
                 android:textColor="?android:attr/textColorSecondary" />
         </LinearLayout>
@@ -63,14 +63,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Idioma de la aplicación"
+                android:text="@string/settings_language_label"
                 android:textSize="18sp"
                 android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Elegir el idioma de los textos"
+                android:text="@string/settings_language_description"
                 android:textSize="14sp"
                 android:textColor="?android:attr/textColorSecondary" />
         </LinearLayout>

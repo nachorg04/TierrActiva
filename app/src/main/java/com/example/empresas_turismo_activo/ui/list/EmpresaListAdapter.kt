@@ -10,10 +10,6 @@ import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.databinding.ItemEmpresaBinding
 import com.example.empresas_turismo_activo.data.model.Empresa
 
-/**
- * Lista reciclada con DiffUtil que compara identidad de negocio y contenido completo.
- * La portada se hidrata mediante Coil (corrutinas + cancelaciones automáticas al reciclar celdas).
- */
 class EmpresaListAdapter(
     private val onEmpresaClick: (Empresa) -> Unit,
 ) : ListAdapter<Empresa, EmpresaListAdapter.EmpresaViewHolder>(EmpresaDiffCallback()) {
@@ -25,7 +21,7 @@ class EmpresaListAdapter(
     }
 
     override fun onBindViewHolder(holder: EmpresaViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.vincular(getItem(position))
     }
 
     class EmpresaViewHolder(
@@ -41,11 +37,10 @@ class EmpresaListAdapter(
             }
         }
 
-        /** Enlaza textos locales y programa la carga remota/desde caché con Coil. */
-        fun bind(item: Empresa) {
+        fun vincular(item: Empresa) {
             bound = item
             binding.textNombre.text = item.nombre
-            binding.textLocalidad.text = item.contacto.localidad
+            binding.textLocalidad.text = item.contacto?.localidad
             binding.imagePortada.load(item.imagenPortada) {
                 crossfade(true)
                 placeholder(R.drawable.ic_launcher_foreground)
@@ -54,7 +49,6 @@ class EmpresaListAdapter(
         }
     }
 
-    /** Callback de equivalencia granular para reusar vistas sin parpadeos innecesarios. */
     private class EmpresaDiffCallback : DiffUtil.ItemCallback<Empresa>() {
 
         override fun areItemsTheSame(oldItem: Empresa, newItem: Empresa): Boolean =

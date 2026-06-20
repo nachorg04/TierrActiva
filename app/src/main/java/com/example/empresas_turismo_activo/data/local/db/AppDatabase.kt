@@ -4,24 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import com.example.empresas_turismo_activo.data.local.converter.EmpresaConverters
 import com.example.empresas_turismo_activo.data.local.dao.EmpresaDao
 import com.example.empresas_turismo_activo.data.local.entity.EmpresaEntity
 
-/**
- * Base de datos Room principal. exportSchema = true genera el archivo JSON de esquema en
- * app/schemas/ con cada versión, lo que facilita inspección y futuras migraciones.
- */
 @Database(
     entities = [EmpresaEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
-@TypeConverters(EmpresaConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    /** Punto de acceso al DAO de empresas. */
     abstract fun empresaDao(): EmpresaDao
 
     companion object {
@@ -30,16 +22,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var instance: AppDatabase? = null
 
-        /**
-         * Devuelve instancia singleton thread-safe; el contexto debe ser applicationContext del proceso Android.
-         */
-        fun getInstance(context: Context): AppDatabase {
+        fun obtenerInstancia(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME,
-                ).build().also { instance = it }
+                ).fallbackToDestructiveMigration().build().also { instance = it }
             }
         }
     }

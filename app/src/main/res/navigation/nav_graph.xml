@@ -23,6 +23,14 @@
         android:name="com.example.empresas_turismo_activo.ui.map.MapFragment"
         android:label="@string/screen_map"
         tools:layout="@layout/fragment_map">
+        <argument
+            android:name="focusLat"
+            app:argType="float"
+            android:defaultValue="0" />
+        <argument
+            android:name="focusLng"
+            app:argType="float"
+            android:defaultValue="0" />
         <action
             android:id="@+id/action_mapFragment_to_detailFragment"
             app:destination="@id/detailFragment" />
@@ -38,6 +46,11 @@
             android:name="empresaId"
             app:argType="string"
             app:nullable="false" />
+        <action
+            android:id="@+id/action_detailFragment_to_mapFragment"
+            app:destination="@id/mapFragment"
+            app:popUpTo="@id/listFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
 </navigation>

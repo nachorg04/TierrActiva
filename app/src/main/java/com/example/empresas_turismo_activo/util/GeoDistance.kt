@@ -5,14 +5,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/**
- * Distancia aproximada en metros sobre la esfera WGS84 (Haversine), coherente con listados ordenados por Google Maps SDK.
- */
 object GeoDistance {
 
     private const val EARTH_RADIUS_M = 6_371_000.0
 
-    fun metersBetween(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+    fun metrosEntre(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
         val φ1 = Math.toRadians(lat1)
         val φ2 = Math.toRadians(lat2)
         val Δφ = Math.toRadians(lat2 - lat1)

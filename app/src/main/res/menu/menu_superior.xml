@@ -4,6 +4,6 @@
 
     <item
         android:id="@+id/action_settings"
-        android:title="Ajustes"
+        android:title="@string/ajustes_title"
         app:showAsAction="never" />
 </menu>

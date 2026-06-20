@@ -21,6 +21,7 @@
     <string name="detail_actividades_titulo">Actividades</string>
     <string name="detail_sin_actividades">No hay actividades listadas.</string>
     <string name="detail_activity_image_desc">Imagen de la actividad</string>
+    <string name="detail_ver_en_mapa">Ver en el mapa</string>
     <string name="language_menu_title">Idioma</string>
     <string name="language_choose">Elegir idioma</string>
     <string name="language_system">Según el sistema</string>
@@ -34,4 +35,29 @@
     <string name="filter_category_dialog_title">Filtrar por categoría</string>
     <string name="filter_category_all">Todas</string>
     <string name="filter_category_content_desc">Filtrar por categoría de actividad</string>
+
+    <string name="ajustes_title">Ajustes</string>
+    <string name="settings_theme_label">Tema visual</string>
+    <string name="settings_theme_description">Cambiar entre modo claro, oscuro o sistema</string>
+    <string name="settings_language_label">Idioma de la aplicación</string>
+    <string name="settings_language_description">Elegir el idioma de los textos</string>
+    <string name="search_hint">Buscar empresa…</string>
+    <string name="chip_sort_az">A-Z</string>
+    <string name="chip_sort_proximity">Cerca de mí</string>
+    <string name="chip_categories">Categorías</string>
+    <string name="chip_categories_count">Categorías (%d)</string>
+    <string name="chip_city">Ciudad</string>
+    <string name="chip_city_count">Ciudad (%d)</string>
+    <string name="theme_dialog_title">Elige el tema</string>
+    <string name="settings_theme_dialog_title">Elige el tema visual</string>
+    <string name="language_dialog_title">Elige el idioma</string>
+    <string name="theme_option_system">Preferencia del Sistema</string>
+    <string name="theme_option_light">Modo Claro</string>
+    <string name="theme_option_dark">Modo Oscuro</string>
+    <string name="snackbar_location_denied">Permiso de ubicación denegado</string>
+    <string name="snackbar_location_unavailable">Ubicación no disponible</string>
+    <string name="dialog_filter_categories_title">Filtrar por categorías</string>
+    <string name="dialog_filter_city_title">Filtrar por ciudad</string>
+    <string name="dialog_apply">Aplicar</string>
+    <string name="dialog_clear_all">Limpiar todo</string>
 </resources>

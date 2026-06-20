@@ -1,18 +1,11 @@
 package com.example.empresas_turismo_activo.data.model
 
-/**
- * Posición geográfica de una empresa de turismo activo.
- *
- * @property lat Latitud en grados decimales (WGS84).
- * @property lng Longitud en grados decimales (WGS84).
- */
 data class Coordenadas(
-    val lat: Double,
-    val lng: Double,
+    val lat: Double? = null,
+    val lng: Double? = null,
 )
 
-/** Evita ordenar contra (0,0) típico de datos ausentes mal normalizados. */
-fun Coordenadas.isLikelyGeocoded(): Boolean =
-    lat in -90.0..90.0 &&
-        lng in -180.0..180.0 &&
-        !(kotlin.math.abs(lat) < 1e-7 && kotlin.math.abs(lng) < 1e-7)
+fun Coordenadas.esProbablementeGeocodificado(): Boolean =
+    (lat ?: 0.0) in -90.0..90.0 &&
+        (lng ?: 0.0) in -180.0..180.0 &&
+        !(kotlin.math.abs(lat ?: 0.0) < 1e-7 && kotlin.math.abs(lng ?: 0.0) < 1e-7)

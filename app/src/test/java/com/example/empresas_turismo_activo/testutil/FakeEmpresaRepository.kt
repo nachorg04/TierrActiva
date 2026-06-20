@@ -1,5 +1,6 @@
 package com.example.empresas_turismo_activo.testutil
 
+import com.example.empresas_turismo_activo.data.model.Contacto
 import com.example.empresas_turismo_activo.data.model.Empresa
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,10 @@ class FakeEmpresaRepository(
         _empresas.value = empresas
     }
 
-    override suspend fun getEmpresaId(id: String): Empresa? =
+    override fun observaCiudad(): Flow<List<Contacto>> =
+        _empresas.map { empresas -> empresas.mapNotNull { it.contacto } }
+
+    override suspend fun obtenerEmpresaPorId(id: String): Empresa? =
         _empresas.value.firstOrNull { it.id == id }
 
     /** Misma semántica que Room [observarFiltradasEmpresas]: nombre/dirección/actividades parseadas + localidad. */
@@ -34,7 +38,7 @@ class FakeEmpresaRepository(
             catalog.filter { empresa ->
                 matchesGlobalPredicate(empresa, g) &&
                     (l.isEmpty() ||
-                        empresa.contacto.localidad.contains(l, ignoreCase = true))
+                        empresa.contacto?.localidad?.contains(l, ignoreCase = true) == true)
             }
         }
     }
@@ -43,11 +47,11 @@ class FakeEmpresaRepository(
 
     private fun matchesGlobalPredicate(empresa: Empresa, q: String): Boolean {
         if (q.isEmpty()) return true
-        if (empresa.nombre.contains(q, ignoreCase = true)) return true
-        if (empresa.contacto.direccion?.contains(q, ignoreCase = true) == true) return true
-        return empresa.informacion.actividades.any { act ->
-            act.nombre.contains(q, ignoreCase = true) ||
-                act.categoria.contains(q, ignoreCase = true)
-        }
+        if (empresa.nombre?.contains(q, ignoreCase = true) == true) return true
+        if (empresa.contacto?.direccion?.contains(q, ignoreCase = true) == true) return true
+        return empresa.informacion?.actividades?.any { act ->
+            act.nombre?.contains(q, ignoreCase = true) == true ||
+                act.categoria?.contains(q, ignoreCase = true) == true
+        } == true
     }
 }

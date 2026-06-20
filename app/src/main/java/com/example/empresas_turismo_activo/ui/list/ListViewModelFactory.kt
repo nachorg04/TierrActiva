@@ -4,9 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.empresas_turismo_activo.data.repository.EmpresaRepository
 
-/**
- * Factory liviana porque el sistema no puede instanciar [ListViewModel] sin su repositorio inyectado.
- */
 class ListViewModelFactory(
     private val repository: EmpresaRepository,
     private val performInitialSync: Boolean = true,

@@ -38,19 +38,22 @@ class ListFragment : Fragment() {
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { grants ->
         if (grants.any { (_, ok) -> ok }) {
-            fetchLastLocationThenSortByProximity()
+            obtenerUbicacionOrdenar()
         } else {
-            Snackbar.make(binding.root, "Permiso de ubicación denegado", Snackbar.LENGTH_LONG).show()
-            // Salvavidas visual: volvemos a marcar A-Z si deniega
+            Snackbar.make(binding.root, getString(R.string.snackbar_location_denied), Snackbar.LENGTH_LONG).show()
+
             binding.chipSortProximity.isChecked = false
             binding.chipSortAlphabet.isChecked = true
+            pendienteSubirArriba = false
         }
     }
 
     private val adapter = EmpresaListAdapter { empresa ->
-        val action = ListFragmentDirections.actionListFragmentToDetailFragment(empresa.id)
+        val action = ListFragmentDirections.actionListFragmentToDetailFragment(empresa.id ?: return@EmpresaListAdapter)
         findNavController().navigate(action)
     }
+
+    private var pendienteSubirArriba = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -65,85 +68,74 @@ class ListFragment : Fragment() {
         binding.recyclerEmpresas.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerEmpresas.adapter = adapter
 
-        // Cajitas para guardar las categorías y ciudades de la base de datos
         var listaCategoriasDisponibles = emptyList<String>()
         var listaCiudadesDisponibles = emptyList<String>()
 
-        // 1. Escuchar el buscador
         binding.inputBuscar.doAfterTextChanged { text ->
-            viewModel.setNombreFilter(text?.toString().orEmpty())
+            viewModel.establecerFiltroNombre(text?.toString().orEmpty())
             binding.recyclerEmpresas.scrollToPosition(0)
         }
 
-        // 2. Escuchar los chips fijos de ordenación
-        binding.chipSortAlphabet.isChecked = true // A-Z por defecto
+        binding.chipSortAlphabet.isChecked = true
 
         binding.chipSortAlphabet.setOnClickListener {
             binding.chipSortAlphabet.isChecked = true
             binding.chipSortProximity.isChecked = false
-            viewModel.setAlphabetSort()
-            binding.recyclerEmpresas.scrollToPosition(0)
+            pendienteSubirArriba = true
+            viewModel.establecerOrdenAlfabetico()
         }
 
         binding.chipSortProximity.setOnClickListener {
             binding.chipSortProximity.isChecked = true
             binding.chipSortAlphabet.isChecked = false
-            onProximityButtonClicked()
+            pendienteSubirArriba = true
+            pulsarBotonProximidad()
         }
 
-        // 3. Abrir el menú flotante al pulsar en Categorías
         binding.chipFiltroCategorias.setOnClickListener {
             val seleccionesActuales = viewModel.categoriasFiltro.value ?: emptySet()
             mostrarDialogoMultiseleccion(listaCategoriasDisponibles, seleccionesActuales)
         }
 
-        // 4. Abrir el menú flotante al pulsar en Ciudad
         binding.chipFiltroCiudad.setOnClickListener {
             val seleccionesActuales = viewModel.ciudadesFiltro.value ?: emptySet()
             mostrarDialogoCiudades(listaCiudadesDisponibles, seleccionesActuales)
         }
 
-        // =====================================================================
-        // 5. OBSERVAR EL VIEWMODEL
-        // =====================================================================
-
-        // A. Pintar la lista de empresas
         viewModel.empresas.observe(viewLifecycleOwner) { empresas ->
-            adapter.submitList(empresas)
+            adapter.submitList(empresas) {
+                if (pendienteSubirArriba) {
+                    pendienteSubirArriba = false
+                    binding.recyclerEmpresas.scrollToPosition(0)
+                }
+            }
         }
 
-        // B. Guardar las categorías para el menú
         viewModel.categoriasDisponibles.observe(viewLifecycleOwner) { categorias ->
             listaCategoriasDisponibles = categorias
         }
 
-        // C. Guardar las ciudades para el menú
         viewModel.ciudadesDisponibles.observe(viewLifecycleOwner) { ciudades ->
             listaCiudadesDisponibles = ciudades
         }
 
-        // D. Cambiar el texto del chip si hay filtros activos
         viewModel.categoriasFiltro.observe(viewLifecycleOwner) { seleccionadas ->
             if (seleccionadas.isNullOrEmpty()) {
-                binding.chipFiltroCategorias.text = "Categorías"
+                binding.chipFiltroCategorias.text = getString(R.string.chip_categories)
             } else {
-                binding.chipFiltroCategorias.text = "Categorías (${seleccionadas.size})"
+                binding.chipFiltroCategorias.text = getString(R.string.chip_categories_count, seleccionadas.size)
             }
         }
 
-        // E. Cambiar el texto del chip de ciudad si hay filtros activos
         viewModel.ciudadesFiltro.observe(viewLifecycleOwner) { seleccionadas ->
             if (seleccionadas.isNullOrEmpty()) {
-                binding.chipFiltroCiudad.text = "Ciudad"
+                binding.chipFiltroCiudad.text = getString(R.string.chip_city)
             } else {
-                binding.chipFiltroCiudad.text = "Ciudad (${seleccionadas.size})"
+                binding.chipFiltroCiudad.text = getString(R.string.chip_city_count, seleccionadas.size)
             }
         }
     }
 
-    // =====================================================================
-    // MENÚ FLOTANTE DE SELECCIÓN MÚLTIPLE
-    // =====================================================================
     private fun mostrarDialogoMultiseleccion(todasLasCategorias: List<String>, seleccionesActuales: Set<String>) {
         val items = todasLasCategorias.toTypedArray()
 
@@ -154,7 +146,7 @@ class ListFragment : Fragment() {
         val nuevasSelecciones = seleccionesActuales.toMutableSet()
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Filtrar por categorías")
+            .setTitle(getString(R.string.dialog_filter_categories_title))
             .setMultiChoiceItems(items, checkedItems) { _, which, isChecked ->
                 val categoriaTocada = items[which]
                 if (isChecked) {
@@ -163,12 +155,12 @@ class ListFragment : Fragment() {
                     nuevasSelecciones.remove(categoriaTocada)
                 }
             }
-            .setPositiveButton("Aplicar") { _, _ ->
-                viewModel.setCategorias(nuevasSelecciones)
+            .setPositiveButton(getString(R.string.dialog_apply)) { _, _ ->
+                viewModel.establecerCategorias(nuevasSelecciones)
                 binding.recyclerEmpresas.scrollToPosition(0)
             }
-            .setNegativeButton("Limpiar todo") { _, _ ->
-                viewModel.setCategorias(emptySet())
+            .setNegativeButton(getString(R.string.dialog_clear_all)) { _, _ ->
+                viewModel.establecerCategorias(emptySet())
                 binding.recyclerEmpresas.scrollToPosition(0)
             }
             .show()
@@ -184,7 +176,7 @@ class ListFragment : Fragment() {
         val nuevasSelecciones = seleccionesActuales.toMutableSet()
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Filtrar por ciudad")
+            .setTitle(getString(R.string.dialog_filter_city_title))
             .setMultiChoiceItems(items, checkedItems) { _, which, isChecked ->
                 val ciudadTocada = items[which]
                 if (isChecked) {
@@ -193,27 +185,24 @@ class ListFragment : Fragment() {
                     nuevasSelecciones.remove(ciudadTocada)
                 }
             }
-            .setPositiveButton("Aplicar") { _, _ ->
-                viewModel.setCiudades(nuevasSelecciones)
+            .setPositiveButton(getString(R.string.dialog_apply)) { _, _ ->
+                viewModel.establecerCiudades(nuevasSelecciones)
                 binding.recyclerEmpresas.scrollToPosition(0)
             }
-            .setNegativeButton("Limpiar todo") { _, _ ->
-                viewModel.setCiudades(emptySet())
+            .setNegativeButton(getString(R.string.dialog_clear_all)) { _, _ ->
+                viewModel.establecerCiudades(emptySet())
                 binding.recyclerEmpresas.scrollToPosition(0)
             }
             .show()
     }
 
-    // =====================================================================
-    // FUNCIONES DE UBICACIÓN
-    // =====================================================================
-    private fun onProximityButtonClicked() {
+    private fun pulsarBotonProximidad() {
         val hasPermission = ContextCompat.checkSelfPermission(
             requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         if (hasPermission) {
-            fetchLastLocationThenSortByProximity()
+            obtenerUbicacionOrdenar()
         } else {
             requestLocationLauncher.launch(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -221,23 +210,23 @@ class ListFragment : Fragment() {
         }
     }
 
-    private fun fetchLastLocationThenSortByProximity() {
+    private fun obtenerUbicacionOrdenar() {
         try {
             fusedClient.lastLocation.addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful && task.result != null) {
                     val loc = task.result
-                    viewModel.updateUserLatLng(loc.latitude, loc.longitude)
-                    viewModel.setProximitySort()
-                    binding.recyclerEmpresas.scrollToPosition(0)
+                    viewModel.actualizarUbicacionUsuario(loc.latitude, loc.longitude)
+                    viewModel.establecerOrdenProximidad()
                 } else {
-                    Snackbar.make(binding.root, "Ubicación no disponible", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, getString(R.string.snackbar_location_unavailable), Snackbar.LENGTH_SHORT).show()
                     binding.chipSortProximity.isChecked = false
                     binding.chipSortAlphabet.isChecked = true
-                    viewModel.setAlphabetSort()
+                    viewModel.establecerOrdenAlfabetico()
+                    pendienteSubirArriba = false
                 }
             }
         } catch (e: SecurityException) {
-            // Permiso revocado repentinamente
+
         }
     }
 

@@ -7,9 +7,8 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.dispose
@@ -17,10 +16,9 @@ import coil.load
 import com.example.empresas_turismo_activo.R
 import com.example.empresas_turismo_activo.TurismoApplication
 import com.example.empresas_turismo_activo.databinding.FragmentDetailBinding
+import com.example.empresas_turismo_activo.data.model.Contacto
 import com.example.empresas_turismo_activo.data.model.Empresa
-import kotlinx.coroutines.launch
 
-/** Destino profundo que recibe [empresaId] gracias a Safe Args desde el catálogo o el mapa. */
 class DetailFragment : Fragment() {
 
     private val args: DetailFragmentArgs by navArgs()
@@ -34,6 +32,7 @@ class DetailFragment : Fragment() {
     }
 
     private val actividadesAdapter = ActividadListAdapter()
+    private var empresaActual: Empresa? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -50,33 +49,44 @@ class DetailFragment : Fragment() {
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.recyclerActividades.adapter = actividadesAdapter
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect(::renderDetailState)
+        binding.buttonVerMapa.setOnClickListener {
+            empresaActual?.coordenadas?.let { c ->
+                val bundle = Bundle().apply {
+                    putFloat("focusLat", (c.lat ?: 0.0).toFloat())
+                    putFloat("focusLng", (c.lng ?: 0.0).toFloat())
+                }
+                val navOptions = NavOptions.Builder()
+                    .setPopUpTo(R.id.listFragment, true, true)
+                    .setLaunchSingleTop(true)
+                    .build()
+                findNavController().navigate(R.id.mapFragment, bundle, navOptions)
             }
         }
+
+        viewModel.uiState.observe(viewLifecycleOwner, ::renderizarEstadoDetalle)
     }
 
-    private fun renderDetailState(state: DetailUiState) {
+    private fun renderizarEstadoDetalle(state: DetailUiState) {
         when (state) {
-            DetailUiState.Loading -> renderLoading()
-            DetailUiState.NotFound -> renderNotFound()
-            is DetailUiState.Success -> render(state.empresa)
+            DetailUiState.Loading -> renderizarCargando()
+            DetailUiState.NotFound -> renderizarNoEncontrado()
+            is DetailUiState.Success -> renderizar(state.empresa)
         }
     }
 
-    private fun renderLoading() {
+    private fun renderizarCargando() {
         binding.textTituloNombre.text = getString(R.string.detail_loading)
         binding.textContacto.text = ""
         binding.textZona.text = ""
         binding.textInformacionTitulo.text = ""
         binding.textDescripcion.text = ""
         binding.textSinActividades.isVisible = false
+        binding.buttonVerMapa.isVisible = false
         actividadesAdapter.submitList(emptyList())
         binding.imagePortada.dispose()
     }
 
-    private fun renderNotFound() {
+    private fun renderizarNoEncontrado() {
         binding.imagePortada.dispose()
         binding.textTituloNombre.text = getString(R.string.detail_not_found)
         binding.textContacto.text = ""
@@ -84,36 +94,23 @@ class DetailFragment : Fragment() {
         binding.textInformacionTitulo.text = ""
         binding.textDescripcion.text = ""
         binding.textSinActividades.isVisible = true
+        binding.buttonVerMapa.isVisible = false
         actividadesAdapter.submitList(emptyList())
     }
 
-    private fun render(empresa: Empresa) {
+    private fun renderizar(empresa: Empresa) {
+        empresaActual = empresa
+        binding.buttonVerMapa.isVisible = true
         binding.textTituloNombre.text = empresa.nombre
-        val contactLines = buildString {
-            appendLine("${empresa.contacto.localidad}, ${empresa.contacto.concejo}")
-            empresa.contacto.direccion?.let { appendLine(it) }
-            if (empresa.contacto.telefonos.isNotEmpty()) {
-                appendLine(empresa.contacto.telefonos.joinToString())
-            }
-            if (empresa.contacto.emails.isNotEmpty()) {
-                appendLine(empresa.contacto.emails.joinToString())
-            }
-            empresa.contacto.web?.let { appendLine(it) }
-            if (empresa.contacto.redesSociales.isNotEmpty()) {
-                appendLine()
-                empresa.contacto.redesSociales.forEach { red ->
-                    appendLine("${red.plataforma}: ${red.url}")
-                }
-            }
-        }
-        binding.textContacto.text = contactLines.trim()
-        binding.textZona.text = getString(R.string.detail_zona_label, empresa.informacion.zonaActividad)
-        binding.textInformacionTitulo.text = empresa.informacion.titulo
-        binding.textDescripcion.text = empresa.informacion.descripcion
+        val c = empresa.contacto ?: return
+        val i = empresa.informacion ?: return
+        binding.textContacto.text = construirLineasContacto(c)
+        binding.textZona.text = getString(R.string.detail_zona_label, i.zonaActividad ?: "")
+        binding.textInformacionTitulo.text = i.titulo
+        binding.textDescripcion.text = i.descripcion
 
-        val actividades = empresa.informacion.actividades
-        val sinActividades = actividades.isEmpty()
-        binding.textSinActividades.isVisible = sinActividades
+        val actividades = i.actividades.orEmpty()
+        binding.textSinActividades.isVisible = actividades.isEmpty()
         actividadesAdapter.submitList(actividades)
 
         binding.imagePortada.load(empresa.imagenPortada) {
@@ -122,6 +119,18 @@ class DetailFragment : Fragment() {
             error(R.drawable.ic_launcher_foreground)
         }
     }
+
+    private fun construirLineasContacto(c: Contacto): String = buildString {
+        appendLine("${c.localidad ?: ""}, ${c.concejo ?: ""}")
+        c.direccion?.let { appendLine(it) }
+        c.telefonos.orEmpty().takeIf { it.isNotEmpty() }?.let { appendLine(it.joinToString()) }
+        c.emails.orEmpty().takeIf { it.isNotEmpty() }?.let { appendLine(it.joinToString()) }
+        c.web?.let { appendLine(it) }
+        c.redesSociales.orEmpty().takeIf { it.isNotEmpty() }?.let { redes ->
+            appendLine()
+            redes.forEach { appendLine("${it.plataforma}: ${it.url}") }
+        }
+    }.trim()
 
     override fun onDestroyView() {
         super.onDestroyView()

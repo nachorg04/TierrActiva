@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Scroll vertical único con Recycler nested disabled para actividades (Coil por ítem). -->
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -41,6 +42,16 @@
             android:padding="16dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             tools:text="Zona de actividad" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonVerMapa"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/detail_ver_en_mapa"
+            app:icon="@android:drawable/ic_dialog_map" />
 
         <TextView
             android:id="@+id/textInformacionTitulo"
